@@ -1,0 +1,34 @@
+services:
+  instagram-monitor:
+    build: .
+    container_name: instagram-monitor
+    restart: unless-stopped
+    volumes:
+      # Persistent data (logs, session files, downloaded media)
+      - ./data:/data
+      # Optional: mount config file
+      # - ./instagram_monitor.conf:/data/instagram_monitor.conf:ro
+    environment:
+      # Set timezone (optional, defaults to UTC)
+      - TZ=UTC
+      # Secrets via environment variables (recommended)
+      # - SESSION_PASSWORD=your_instagram_password
+      # - SMTP_PASSWORD=your_smtp_password
+    env_file:
+      # Or use a .env file for secrets (create this file, don't commit it)
+      - path: .env.docker
+        required: false
+    # Override command to monitor a specific user
+    # command: ["-u", "your_insta_user", "target_user", "-s"]
+
+  # Example: monitor multiple users with separate containers
+  # instagram-monitor-user2:
+  #   build: .
+  #   container_name: instagram-monitor-user2
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./data-user2:/data
+  #   env_file:
+  #     - path: .env.docker
+  #       required: false
+  #   command: ["-u", "your_insta_user", "another_target_user", "-s"]

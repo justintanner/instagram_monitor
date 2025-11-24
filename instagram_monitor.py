@@ -306,7 +306,7 @@ LIVENESS_CHECK_COUNTER = LIVENESS_CHECK_INTERVAL / INSTA_CHECK_INTERVAL
 
 stdout_bck = None
 last_output = []
-csvfieldnames = ['Date', 'Type', 'Old', 'New']
+csvfieldnames = ["Date", "Type", "Old", "New"]
 
 imgcat_exe = ""
 
@@ -343,10 +343,13 @@ from email.mime.image import MIMEImage
 import argparse
 import csv
 import random
+
 try:
     import pytz
 except ModuleNotFoundError:
-    raise SystemExit("Error: Couldn't find the pytz library !\n\nTo install it, run:\n    pip3 install pytz\n\nOnce installed, re-run this tool")
+    raise SystemExit(
+        "Error: Couldn't find the pytz library !\n\nTo install it, run:\n    pip3 install pytz\n\nOnce installed, re-run this tool"
+    )
 try:
     from tzlocal import get_localzone
 except ImportError:
@@ -362,7 +365,9 @@ try:
     import instaloader
     from instaloader import ConnectionException, Instaloader
 except ModuleNotFoundError:
-    raise SystemExit("Error: Couldn't find the instaloader library !\n\nTo install it, run:\n    pip3 install instaloader\n\nOnce installed, re-run this tool. For more help, visit:\nhttps://instaloader.github.io/")
+    raise SystemExit(
+        "Error: Couldn't find the instaloader library !\n\nTo install it, run:\n    pip3 install instaloader\n\nOnce installed, re-run this tool. For more help, visit:\nhttps://instaloader.github.io/"
+    )
 
 from instaloader.exceptions import PrivateProfileNotFollowedException
 from html import escape
@@ -384,7 +389,7 @@ class Logger(object):
 
     def write(self, message):
         global last_output
-        if message != '\n':
+        if message != "\n":
             last_output.append(message)
         self.terminal.write(message)
         self.logfile.write(message)
@@ -398,14 +403,14 @@ class Logger(object):
 # Signal handler when user presses Ctrl+C
 def signal_handler(sig, frame):
     sys.stdout = stdout_bck
-    print('\n* You pressed Ctrl+C, tool is terminated.')
+    print("\n* You pressed Ctrl+C, tool is terminated.")
     sys.exit(0)
 
 
 # Checks internet connectivity
 def check_internet(url=CHECK_INTERNET_URL, timeout=CHECK_INTERNET_TIMEOUT):
     try:
-        _ = req.get(url, headers={'User-Agent': USER_AGENT}, timeout=timeout)
+        _ = req.get(url, headers={"User-Agent": USER_AGENT}, timeout=timeout)
         return True
     except req.RequestException as e:
         print(f"* No connectivity, please check your network:\n\n{e}")
@@ -417,10 +422,10 @@ def clear_screen(enabled=True):
     if not enabled:
         return
     try:
-        if platform.system() == 'Windows':
-            os.system('cls')
+        if platform.system() == "Windows":
+            os.system("cls")
         else:
-            os.system('clear')
+            os.system("clear")
     except Exception:
         print("* Cannot clear the screen contents")
 
@@ -428,13 +433,13 @@ def clear_screen(enabled=True):
 # Converts absolute value of seconds to human readable format
 def display_time(seconds, granularity=2):
     intervals = (
-        ('years', 31556952),  # approximation
-        ('months', 2629746),  # approximation
-        ('weeks', 604800),    # 60 * 60 * 24 * 7
-        ('days', 86400),      # 60 * 60 * 24
-        ('hours', 3600),      # 60 * 60
-        ('minutes', 60),
-        ('seconds', 1),
+        ("years", 31556952),  # approximation
+        ("months", 2629746),  # approximation
+        ("weeks", 604800),  # 60 * 60 * 24 * 7
+        ("days", 86400),  # 60 * 60 * 24
+        ("hours", 3600),  # 60 * 60
+        ("minutes", 60),
+        ("seconds", 1),
     )
     result = []
 
@@ -444,17 +449,25 @@ def display_time(seconds, granularity=2):
             if value:
                 seconds -= value * count
                 if value == 1:
-                    name = name.rstrip('s')
+                    name = name.rstrip("s")
                 result.append(f"{value} {name}")
-        return ', '.join(result[:granularity])
+        return ", ".join(result[:granularity])
     else:
-        return '0 seconds'
+        return "0 seconds"
 
 
 # Calculates time span between two timestamps, accepts timestamp integers, floats and datetime objects
-def calculate_timespan(timestamp1, timestamp2, show_weeks=True, show_hours=True, show_minutes=True, show_seconds=False, granularity=3):
+def calculate_timespan(
+    timestamp1,
+    timestamp2,
+    show_weeks=True,
+    show_hours=True,
+    show_minutes=True,
+    show_seconds=False,
+    granularity=3,
+):
     result = []
-    intervals = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds']
+    intervals = ["years", "months", "weeks", "days", "hours", "minutes", "seconds"]
     ts1 = timestamp1
     ts2 = timestamp2
 
@@ -529,24 +542,36 @@ def calculate_timespan(timestamp1, timestamp2, show_weeks=True, show_hours=True,
             if interval > 0:
                 name = intervals[index]
                 if interval == 1:
-                    name = name.rstrip('s')
+                    name = name.rstrip("s")
                 result.append(f"{interval} {name}")
 
-        return ', '.join(result[:granularity])
+        return ", ".join(result[:granularity])
     else:
-        return '0 seconds'
+        return "0 seconds"
 
 
 # Sends email notification
-def send_email(subject, body, body_html, use_ssl, image_file="", image_name="image1", smtp_timeout=15):
-    fqdn_re = re.compile(r'(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}\.?$)')
-    email_re = re.compile(r'[^@]+@[^@]+\.[^@]+')
+def send_email(
+    subject,
+    body,
+    body_html,
+    use_ssl,
+    image_file="",
+    image_name="image1",
+    smtp_timeout=15,
+):
+    fqdn_re = re.compile(
+        r"(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}\.?$)"
+    )
+    email_re = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
     try:
         ipaddress.ip_address(str(SMTP_HOST))
     except ValueError:
         if not fqdn_re.search(str(SMTP_HOST)):
-            print("Error sending email - SMTP settings are incorrect (invalid IP address/FQDN in SMTP_HOST)")
+            print(
+                "Error sending email - SMTP settings are incorrect (invalid IP address/FQDN in SMTP_HOST)"
+            )
             return 1
 
     try:
@@ -554,23 +579,42 @@ def send_email(subject, body, body_html, use_ssl, image_file="", image_name="ima
         if not (1 <= port <= 65535):
             raise ValueError
     except ValueError:
-        print("Error sending email - SMTP settings are incorrect (invalid port number in SMTP_PORT)")
+        print(
+            "Error sending email - SMTP settings are incorrect (invalid port number in SMTP_PORT)"
+        )
         return 1
 
-    if not email_re.search(str(SENDER_EMAIL)) or not email_re.search(str(RECEIVER_EMAIL)):
-        print("Error sending email - SMTP settings are incorrect (invalid email in SENDER_EMAIL or RECEIVER_EMAIL)")
+    if not email_re.search(str(SENDER_EMAIL)) or not email_re.search(
+        str(RECEIVER_EMAIL)
+    ):
+        print(
+            "Error sending email - SMTP settings are incorrect (invalid email in SENDER_EMAIL or RECEIVER_EMAIL)"
+        )
         return 1
 
-    if not SMTP_USER or not isinstance(SMTP_USER, str) or SMTP_USER == "your_smtp_user" or not SMTP_PASSWORD or not isinstance(SMTP_PASSWORD, str) or SMTP_PASSWORD == "your_smtp_password":
-        print("Error sending email - SMTP settings are incorrect (check SMTP_USER & SMTP_PASSWORD variables)")
+    if (
+        not SMTP_USER
+        or not isinstance(SMTP_USER, str)
+        or SMTP_USER == "your_smtp_user"
+        or not SMTP_PASSWORD
+        or not isinstance(SMTP_PASSWORD, str)
+        or SMTP_PASSWORD == "your_smtp_password"
+    ):
+        print(
+            "Error sending email - SMTP settings are incorrect (check SMTP_USER & SMTP_PASSWORD variables)"
+        )
         return 1
 
     if not subject or not isinstance(subject, str):
-        print("Error sending email - SMTP settings are incorrect (subject is not a string or is empty)")
+        print(
+            "Error sending email - SMTP settings are incorrect (subject is not a string or is empty)"
+        )
         return 1
 
     if not body and not body_html:
-        print("Error sending email - SMTP settings are incorrect (body and body_html cannot be empty at the same time)")
+        print(
+            "Error sending email - SMTP settings are incorrect (body and body_html cannot be empty at the same time)"
+        )
         return 1
 
     try:
@@ -581,25 +625,25 @@ def send_email(subject, body, body_html, use_ssl, image_file="", image_name="ima
         else:
             smtpObj = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=smtp_timeout)
         smtpObj.login(SMTP_USER, SMTP_PASSWORD)
-        email_msg = MIMEMultipart('alternative')
+        email_msg = MIMEMultipart("alternative")
         email_msg["From"] = SENDER_EMAIL
         email_msg["To"] = RECEIVER_EMAIL
-        email_msg["Subject"] = str(Header(subject, 'utf-8'))
+        email_msg["Subject"] = str(Header(subject, "utf-8"))
 
         if body:
-            part1 = MIMEText(body, 'plain')
-            part1 = MIMEText(body.encode('utf-8'), 'plain', _charset='utf-8')
+            part1 = MIMEText(body, "plain")
+            part1 = MIMEText(body.encode("utf-8"), "plain", _charset="utf-8")
             email_msg.attach(part1)
 
         if body_html:
-            part2 = MIMEText(body_html, 'html')
-            part2 = MIMEText(body_html.encode('utf-8'), 'html', _charset='utf-8')
+            part2 = MIMEText(body_html, "html")
+            part2 = MIMEText(body_html.encode("utf-8"), "html", _charset="utf-8")
             email_msg.attach(part2)
 
         if image_file:
-            with open(image_file, 'rb') as fp:
+            with open(image_file, "rb") as fp:
                 img_part = MIMEImage(fp.read())
-            img_part.add_header('Content-ID', f'<{image_name}>')
+            img_part.add_header("Content-ID", f"<{image_name}>")
             email_msg.attach(img_part)
 
         smtpObj.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, email_msg.as_string())
@@ -614,8 +658,12 @@ def send_email(subject, body, body_html, use_ssl, image_file="", image_name="ima
 def init_csv_file(csv_file_name):
     try:
         if not os.path.isfile(csv_file_name) or os.path.getsize(csv_file_name) == 0:
-            with open(csv_file_name, 'a', newline='', buffering=1, encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=csvfieldnames, quoting=csv.QUOTE_NONNUMERIC)
+            with open(
+                csv_file_name, "a", newline="", buffering=1, encoding="utf-8"
+            ) as f:
+                writer = csv.DictWriter(
+                    f, fieldnames=csvfieldnames, quoting=csv.QUOTE_NONNUMERIC
+                )
                 writer.writeheader()
     except Exception as e:
         raise RuntimeError(f"Could not initialize CSV file '{csv_file_name}': {e}")
@@ -625,9 +673,15 @@ def init_csv_file(csv_file_name):
 def write_csv_entry(csv_file_name, timestamp, object_type, old, new):
     try:
 
-        with open(csv_file_name, 'a', newline='', buffering=1, encoding="utf-8") as csv_file:
-            csvwriter = csv.DictWriter(csv_file, fieldnames=csvfieldnames, quoting=csv.QUOTE_NONNUMERIC)
-            csvwriter.writerow({'Date': timestamp, 'Type': object_type, 'Old': old, 'New': new})
+        with open(
+            csv_file_name, "a", newline="", buffering=1, encoding="utf-8"
+        ) as csv_file:
+            csvwriter = csv.DictWriter(
+                csv_file, fieldnames=csvfieldnames, quoting=csv.QUOTE_NONNUMERIC
+            )
+            csvwriter.writerow(
+                {"Date": timestamp, "Type": object_type, "Old": old, "New": new}
+            )
 
     except Exception as e:
         raise RuntimeError(f"Failed to write to CSV file '{csv_file_name}': {e}")
@@ -636,9 +690,9 @@ def write_csv_entry(csv_file_name, timestamp, object_type, old, new):
 # Randomizes how often to perform checks for user activity (INSTA_CHECK_INTERVAL)
 def randomize_number(number, diff_low, diff_high):
     if number > diff_low:
-        return (random.randint(number - diff_low, number + diff_high))
+        return random.randint(number - diff_low, number + diff_high)
     else:
-        return (random.randint(number, number + diff_high))
+        return random.randint(number, number + diff_high)
 
 
 # Converts a datetime to local timezone and removes timezone info (naive)
@@ -658,7 +712,9 @@ def convert_to_local_naive(dt: datetime | None = None):
 
 # Returns current local time without timezone info (naive)
 def now_local_naive():
-    return datetime.now(pytz.timezone(LOCAL_TIMEZONE)).replace(microsecond=0, tzinfo=None)
+    return datetime.now(pytz.timezone(LOCAL_TIMEZONE)).replace(
+        microsecond=0, tzinfo=None
+    )
 
 
 # Returns current local time with timezone info (aware)
@@ -698,7 +754,7 @@ def convert_utc_str_to_tz_datetime(dt_str):
 
 # Returns the current date/time in human readable format; eg. Sun 21 Apr 2024, 15:08:45
 def get_cur_ts(ts_str=""):
-    return (f'{ts_str}{calendar.day_abbr[(now_local_naive()).weekday()]}, {now_local_naive().strftime("%d %b %Y, %H:%M:%S")}')
+    return f'{ts_str}{calendar.day_abbr[(now_local_naive()).weekday()]}, {now_local_naive().strftime("%d %b %Y, %H:%M:%S")}'
 
 
 # Prints the current date/time in human readable format with separator; eg. Sun 21 Apr 2024, 15:08:45
@@ -732,7 +788,9 @@ def get_date_from_ts(ts):
     else:
         return ""
 
-    return (f'{calendar.day_abbr[ts_new.weekday()]} {ts_new.strftime("%d %b %Y, %H:%M:%S")}')
+    return (
+        f'{calendar.day_abbr[ts_new.weekday()]} {ts_new.strftime("%d %b %Y, %H:%M:%S")}'
+    )
 
 
 # Returns the timestamp/datetime object in human readable format (short version); eg.
@@ -742,7 +800,14 @@ def get_date_from_ts(ts):
 # Sun 21 Apr (if show_hour == False)
 # Sun 21 Apr 15:08:32 (if show_seconds == True)
 # 21 Apr 15:08 (if show_weekday == False)
-def get_short_date_from_ts(ts, show_year=False, show_hour=True, show_weekday=True, show_seconds=False, always_show_year=False):
+def get_short_date_from_ts(
+    ts,
+    show_year=False,
+    show_hour=True,
+    show_weekday=True,
+    show_seconds=False,
+    always_show_year=False,
+):
     tz = pytz.timezone(LOCAL_TIMEZONE)
     if always_show_year:
         show_year = True
@@ -777,7 +842,9 @@ def get_short_date_from_ts(ts, show_year=False, show_hour=True, show_weekday=Tru
 
     if (show_year and ts_new.year != datetime.now(tz).year) or always_show_year:
         hour_prefix = "," if show_hour else ""
-        return f'{weekday_str}{ts_new.strftime(f"%d %b %y{hour_prefix}{hour_strftime}")}'
+        return (
+            f'{weekday_str}{ts_new.strftime(f"%d %b %y{hour_prefix}{hour_strftime}")}'
+        )
     else:
         return f'{weekday_str}{ts_new.strftime(f"%d %b{hour_strftime}")}'
 
@@ -845,7 +912,9 @@ def get_range_of_dates_from_tss(ts1, ts2, between_sep=" - ", short=False):
         if short:
             out_str = f"{get_short_date_from_ts(ts1_new)}{between_sep}{get_short_date_from_ts(ts2_new)}"
         else:
-            out_str = f"{get_date_from_ts(ts1_new)}{between_sep}{get_date_from_ts(ts2_new)}"
+            out_str = (
+                f"{get_date_from_ts(ts1_new)}{between_sep}{get_date_from_ts(ts2_new)}"
+            )
 
     return str(out_str)
 
@@ -861,7 +930,9 @@ def toggle_status_changes_notifications_signal_handler(sig, frame):
     STATUS_NOTIFICATION = not STATUS_NOTIFICATION
     sig_name = signal.Signals(sig).name
     print(f"* Signal {sig_name} received")
-    print(f"* Email notifications: [new posts/reels/stories/followings/bio/profile picture = {STATUS_NOTIFICATION}]")
+    print(
+        f"* Email notifications: [new posts/reels/stories/followings/bio/profile picture = {STATUS_NOTIFICATION}]"
+    )
     print_cur_ts("Timestamp:\t\t")
 
 
@@ -885,7 +956,9 @@ def increase_check_signal_handler(sig, frame):
         check_interval_low = INSTA_CHECK_INTERVAL - RANDOM_SLEEP_DIFF_LOW
     sig_name = signal.Signals(sig).name
     print(f"* Signal {sig_name} received")
-    print(f"* Instagram timers: [check interval: {display_time(check_interval_low)} - {display_time(INSTA_CHECK_INTERVAL + RANDOM_SLEEP_DIFF_HIGH)}]")
+    print(
+        f"* Instagram timers: [check interval: {display_time(check_interval_low)} - {display_time(INSTA_CHECK_INTERVAL + RANDOM_SLEEP_DIFF_HIGH)}]"
+    )
     print_cur_ts("Timestamp:\t\t")
 
 
@@ -900,7 +973,9 @@ def decrease_check_signal_handler(sig, frame):
         check_interval_low = INSTA_CHECK_INTERVAL - RANDOM_SLEEP_DIFF_LOW
     sig_name = signal.Signals(sig).name
     print(f"* Signal {sig_name} received")
-    print(f"* Instagram timers: [check interval: {display_time(check_interval_low)} - {display_time(INSTA_CHECK_INTERVAL + RANDOM_SLEEP_DIFF_HIGH)}]")
+    print(
+        f"* Instagram timers: [check interval: {display_time(check_interval_low)} - {display_time(INSTA_CHECK_INTERVAL + RANDOM_SLEEP_DIFF_HIGH)}]"
+    )
     print_cur_ts("Timestamp:\t\t")
 
 
@@ -910,12 +985,13 @@ def reload_secrets_signal_handler(sig, frame):
     print(f"* Signal {sig_name} received")
 
     # Disable autoscan if DOTENV_FILE set to none
-    if DOTENV_FILE and DOTENV_FILE.lower() == 'none':
+    if DOTENV_FILE and DOTENV_FILE.lower() == "none":
         env_path = None
     else:
         # Reload .env if python-dotenv is installed
         try:
             from dotenv import load_dotenv, find_dotenv
+
             if DOTENV_FILE:
                 env_path = DOTENV_FILE
             else:
@@ -942,9 +1018,14 @@ def reload_secrets_signal_handler(sig, frame):
 # Saves user's image / video to selected file name
 def save_pic_video(image_video_url, image_video_file_name, custom_mdate_ts=0):
     try:
-        image_video_response = req.get(image_video_url, headers={'User-Agent': USER_AGENT}, timeout=FUNCTION_TIMEOUT, stream=True)
+        image_video_response = req.get(
+            image_video_url,
+            headers={"User-Agent": USER_AGENT},
+            timeout=FUNCTION_TIMEOUT,
+            stream=True,
+        )
         image_video_response.raise_for_status()
-        url_time = image_video_response.headers.get('last-modified')
+        url_time = image_video_response.headers.get("last-modified")
         url_time_in_tz_ts = 0
         if url_time and not custom_mdate_ts:
             url_time_in_tz = convert_utc_str_to_tz_datetime(url_time)
@@ -954,7 +1035,7 @@ def save_pic_video(image_video_url, image_video_file_name, custom_mdate_ts=0):
                 url_time_in_tz_ts = 0
 
         if image_video_response.status_code == 200:
-            with open(image_video_file_name, 'wb') as f:
+            with open(image_video_file_name, "wb") as f:
                 image_video_response.raw.decode_content = True
                 shutil.copyfileobj(image_video_response.raw, f)
             if url_time_in_tz_ts and not custom_mdate_ts:
@@ -971,7 +1052,7 @@ def compare_images(file1, file2):
     if not os.path.isfile(file1) or not os.path.isfile(file1):
         return False
     try:
-        with open(file1, 'rb') as f1, open(file2, 'rb') as f2:
+        with open(file1, "rb") as f1, open(file2, "rb") as f2:
             for line1, line2 in zip_longest(f1, f2, fillvalue=None):
                 if line1 == line2:
                     continue
@@ -984,7 +1065,18 @@ def compare_images(file1, file2):
 
 
 # Detects changed Instagram profile pictures
-def detect_changed_profile_picture(user, profile_image_url, profile_pic_file, profile_pic_file_tmp, profile_pic_file_old, profile_pic_file_empty, csv_file_name, r_sleep_time, send_email_notification, func_ver):
+def detect_changed_profile_picture(
+    user,
+    profile_image_url,
+    profile_pic_file,
+    profile_pic_file_tmp,
+    profile_pic_file_old,
+    profile_pic_file_empty,
+    csv_file_name,
+    r_sleep_time,
+    send_email_notification,
+    func_ver,
+):
 
     is_empty_profile_pic = False
     is_empty_profile_pic_tmp = False
@@ -997,36 +1089,63 @@ def detect_changed_profile_picture(user, profile_image_url, profile_pic_file, pr
     # Profile pic does not exist in the filesystem
     if not os.path.isfile(profile_pic_file):
         if save_pic_video(profile_image_url, profile_pic_file):
-            profile_pic_mdate_dt = datetime.fromtimestamp(int(os.path.getmtime(profile_pic_file)), pytz.timezone(LOCAL_TIMEZONE))
+            profile_pic_mdate_dt = datetime.fromtimestamp(
+                int(os.path.getmtime(profile_pic_file)), pytz.timezone(LOCAL_TIMEZONE)
+            )
 
             if profile_pic_file_empty and os.path.isfile(profile_pic_file_empty):
-                is_empty_profile_pic = compare_images(profile_pic_file, profile_pic_file_empty)
+                is_empty_profile_pic = compare_images(
+                    profile_pic_file, profile_pic_file_empty
+                )
 
             if is_empty_profile_pic:
-                print(f"* User {user} does not have profile picture set, empty template saved to '{profile_pic_file}'{new_line}")
+                print(
+                    f"* User {user} does not have profile picture set, empty template saved to '{profile_pic_file}'{new_line}"
+                )
             else:
                 print(f"* User {user} profile picture saved to '{profile_pic_file}'")
-                print(f"* Profile picture has been added on {get_short_date_from_ts(profile_pic_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False)} ago){new_line}")
+                print(
+                    f"* Profile picture has been added on {get_short_date_from_ts(profile_pic_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False)} ago){new_line}"
+                )
 
             try:
                 if imgcat_exe and not is_empty_profile_pic:
                     if func_ver == 1:
-                        subprocess.run(f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {profile_pic_file}", shell=True, check=True)
+                        subprocess.run(
+                            f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {profile_pic_file}",
+                            shell=True,
+                            check=True,
+                        )
                     else:
-                        subprocess.run(f"{imgcat_exe} {profile_pic_file} {'&' if platform.system() == 'Windows' else ';'} {'echo.' if platform.system() == 'Windows' else 'echo'}", shell=True, check=True)
-                shutil.copy2(profile_pic_file, f'instagram_{user}_profile_pic_{profile_pic_mdate_dt.strftime("%Y%m%d_%H%M")}.jpeg')
+                        subprocess.run(
+                            f"{imgcat_exe} {profile_pic_file} {'&' if platform.system() == 'Windows' else ';'} {'echo.' if platform.system() == 'Windows' else 'echo'}",
+                            shell=True,
+                            check=True,
+                        )
+                shutil.copy2(
+                    profile_pic_file,
+                    f'instagram_{user}_profile_pic_{profile_pic_mdate_dt.strftime("%Y%m%d_%H%M")}.jpeg',
+                )
             except Exception:
                 pass
             try:
                 if csv_file_name and not is_empty_profile_pic:
-                    write_csv_entry(csv_file_name, now_local_naive(), "Profile Picture Created", "", convert_to_local_naive(profile_pic_mdate_dt))
+                    write_csv_entry(
+                        csv_file_name,
+                        now_local_naive(),
+                        "Profile Picture Created",
+                        "",
+                        convert_to_local_naive(profile_pic_mdate_dt),
+                    )
             except Exception as e:
                 print(f"* Error: {e}")
         else:
             print(f"* Error saving profile picture !{new_line}")
 
         if func_ver == 2:
-            print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+            print(
+                f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+            )
             print_cur_ts("Timestamp:\t\t")
         else:
             print_cur_ts("\nTimestamp:\t\t")
@@ -1038,20 +1157,34 @@ def detect_changed_profile_picture(user, profile_image_url, profile_pic_file, pr
         m_body = ""
         m_body_html = ""
         m_body_html_pic_saved_text = ""
-        profile_pic_mdate_dt = datetime.fromtimestamp(int(os.path.getmtime(profile_pic_file)), pytz.timezone(LOCAL_TIMEZONE))
+        profile_pic_mdate_dt = datetime.fromtimestamp(
+            int(os.path.getmtime(profile_pic_file)), pytz.timezone(LOCAL_TIMEZONE)
+        )
         profile_pic_mdate = get_short_date_from_ts(profile_pic_mdate_dt, True)
         if save_pic_video(profile_image_url, profile_pic_file_tmp):
-            profile_pic_tmp_mdate_dt = datetime.fromtimestamp(int(os.path.getmtime(profile_pic_file_tmp)), pytz.timezone(LOCAL_TIMEZONE))
+            profile_pic_tmp_mdate_dt = datetime.fromtimestamp(
+                int(os.path.getmtime(profile_pic_file_tmp)),
+                pytz.timezone(LOCAL_TIMEZONE),
+            )
             if profile_pic_file_empty and os.path.isfile(profile_pic_file_empty):
-                is_empty_profile_pic = compare_images(profile_pic_file, profile_pic_file_empty)
+                is_empty_profile_pic = compare_images(
+                    profile_pic_file, profile_pic_file_empty
+                )
 
-            if not compare_images(profile_pic_file, profile_pic_file_tmp) and profile_pic_mdate_dt != profile_pic_tmp_mdate_dt:
+            if (
+                not compare_images(profile_pic_file, profile_pic_file_tmp)
+                and profile_pic_mdate_dt != profile_pic_tmp_mdate_dt
+            ):
                 if profile_pic_file_empty and os.path.isfile(profile_pic_file_empty):
-                    is_empty_profile_pic_tmp = compare_images(profile_pic_file_tmp, profile_pic_file_empty)
+                    is_empty_profile_pic_tmp = compare_images(
+                        profile_pic_file_tmp, profile_pic_file_empty
+                    )
 
                 # User has removed profile picture
                 if is_empty_profile_pic_tmp and not is_empty_profile_pic:
-                    print(f"* User {user} has removed profile picture added on {profile_pic_mdate} ! (after {calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False, granularity=2)}){new_line}")
+                    print(
+                        f"* User {user} has removed profile picture added on {profile_pic_mdate} ! (after {calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False, granularity=2)}){new_line}"
+                    )
                     csv_text = "Profile Picture Removed"
 
                     if send_email_notification:
@@ -1064,11 +1197,15 @@ def detect_changed_profile_picture(user, profile_image_url, profile_pic_file, pr
                 elif is_empty_profile_pic and not is_empty_profile_pic_tmp:
                     print(f"* User {user} has set profile picture !")
                     print(f"* User profile picture saved to '{profile_pic_file}'")
-                    print(f"* Profile picture has been added on {get_short_date_from_ts(profile_pic_tmp_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_tmp_mdate_dt, show_seconds=False)} ago){new_line}")
+                    print(
+                        f"* Profile picture has been added on {get_short_date_from_ts(profile_pic_tmp_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_tmp_mdate_dt, show_seconds=False)} ago){new_line}"
+                    )
                     csv_text = "Profile Picture Created"
 
                     if send_email_notification:
-                        m_body_html_pic_saved_text = f'<br><br><img src="cid:profile_pic">'
+                        m_body_html_pic_saved_text = (
+                            f'<br><br><img src="cid:profile_pic">'
+                        )
                         m_subject = f"Instagram user {user} has set profile picture ! ({get_short_date_from_ts(profile_pic_tmp_mdate_dt, True)})"
 
                         m_body = f"Instagram user {user} has set profile picture !\n\nProfile picture has been added on {get_short_date_from_ts(profile_pic_tmp_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_tmp_mdate_dt, show_seconds=False)} ago)\n\nCheck interval: {display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)}){get_cur_ts(nl_ch + 'Timestamp: ')}"
@@ -1076,12 +1213,18 @@ def detect_changed_profile_picture(user, profile_image_url, profile_pic_file, pr
 
                 # User has changed profile picture
                 elif not is_empty_profile_pic_tmp and not is_empty_profile_pic:
-                    print(f"* User {user} has changed profile picture ! (previous one added on {profile_pic_mdate} - {calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False, granularity=2)} ago)")
-                    print(f"* Profile picture has been added on {get_short_date_from_ts(profile_pic_tmp_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_tmp_mdate_dt, show_seconds=False)} ago){new_line}")
+                    print(
+                        f"* User {user} has changed profile picture ! (previous one added on {profile_pic_mdate} - {calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False, granularity=2)} ago)"
+                    )
+                    print(
+                        f"* Profile picture has been added on {get_short_date_from_ts(profile_pic_tmp_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_tmp_mdate_dt, show_seconds=False)} ago){new_line}"
+                    )
                     csv_text = "Profile Picture Changed"
 
                     if send_email_notification:
-                        m_body_html_pic_saved_text = f'<br><br><img src="cid:profile_pic">'
+                        m_body_html_pic_saved_text = (
+                            f'<br><br><img src="cid:profile_pic">'
+                        )
                         m_subject = f"Instagram user {user} has changed profile picture ! (after {calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False, granularity=2)})"
 
                         m_body = f"Instagram user {user} has changed profile picture !\n\nPrevious one added on {profile_pic_mdate} ({calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False, granularity=2)} ago)\n\nProfile picture has been added on {get_short_date_from_ts(profile_pic_tmp_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_tmp_mdate_dt, show_seconds=False)} ago)\n\nCheck interval: {display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)}){get_cur_ts(nl_ch + 'Timestamp: ')}"
@@ -1090,21 +1233,50 @@ def detect_changed_profile_picture(user, profile_image_url, profile_pic_file, pr
                 try:
                     if csv_file_name:
                         if csv_text == "Profile Picture Removed":
-                            write_csv_entry(csv_file_name, now_local_naive(), csv_text, convert_to_local_naive(profile_pic_mdate_dt), "")
+                            write_csv_entry(
+                                csv_file_name,
+                                now_local_naive(),
+                                csv_text,
+                                convert_to_local_naive(profile_pic_mdate_dt),
+                                "",
+                            )
                         elif csv_text == "Profile Picture Created":
-                            write_csv_entry(csv_file_name, now_local_naive(), csv_text, "", convert_to_local_naive(profile_pic_tmp_mdate_dt))
+                            write_csv_entry(
+                                csv_file_name,
+                                now_local_naive(),
+                                csv_text,
+                                "",
+                                convert_to_local_naive(profile_pic_tmp_mdate_dt),
+                            )
                         else:
-                            write_csv_entry(csv_file_name, now_local_naive(), csv_text, convert_to_local_naive(profile_pic_mdate_dt), convert_to_local_naive(profile_pic_tmp_mdate_dt))
+                            write_csv_entry(
+                                csv_file_name,
+                                now_local_naive(),
+                                csv_text,
+                                convert_to_local_naive(profile_pic_mdate_dt),
+                                convert_to_local_naive(profile_pic_tmp_mdate_dt),
+                            )
                 except Exception as e:
                     print(f"* Error: {e}")
 
                 try:
                     if imgcat_exe and not is_empty_profile_pic_tmp:
                         if func_ver == 1:
-                            subprocess.run(f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {profile_pic_file_tmp}", shell=True, check=True)
+                            subprocess.run(
+                                f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {profile_pic_file_tmp}",
+                                shell=True,
+                                check=True,
+                            )
                         else:
-                            subprocess.run(f"{imgcat_exe} {profile_pic_file_tmp} {'&' if platform.system() == 'Windows' else ';'} {'echo.' if platform.system() == 'Windows' else 'echo'}", shell=True, check=True)
-                    shutil.copy2(profile_pic_file_tmp, f'instagram_{user}_profile_pic_{profile_pic_tmp_mdate_dt.strftime("%Y%m%d_%H%M")}.jpeg')
+                            subprocess.run(
+                                f"{imgcat_exe} {profile_pic_file_tmp} {'&' if platform.system() == 'Windows' else ';'} {'echo.' if platform.system() == 'Windows' else 'echo'}",
+                                shell=True,
+                                check=True,
+                            )
+                    shutil.copy2(
+                        profile_pic_file_tmp,
+                        f'instagram_{user}_profile_pic_{profile_pic_tmp_mdate_dt.strftime("%Y%m%d_%H%M")}.jpeg',
+                    )
                     if csv_text != "Profile Picture Created":
                         os.replace(profile_pic_file, profile_pic_file_old)
                     os.replace(profile_pic_file_tmp, profile_pic_file)
@@ -1117,12 +1289,21 @@ def detect_changed_profile_picture(user, profile_image_url, profile_pic_file, pr
                         send_email(m_subject, m_body, "", SMTP_SSL)
                     else:
                         if m_body_html_pic_saved_text:
-                            send_email(m_subject, m_body, m_body_html, SMTP_SSL, profile_pic_file, "profile_pic")
+                            send_email(
+                                m_subject,
+                                m_body,
+                                m_body_html,
+                                SMTP_SSL,
+                                profile_pic_file,
+                                "profile_pic",
+                            )
                         else:
                             send_email(m_subject, m_body, m_body_html, SMTP_SSL)
 
                 if func_ver == 2:
-                    print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+                    print(
+                        f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+                    )
                     print_cur_ts("Timestamp:\t\t")
 
             else:
@@ -1131,10 +1312,16 @@ def detect_changed_profile_picture(user, profile_image_url, profile_pic_file, pr
                         print(f"* User {user} does not have profile picture set")
                     else:
                         print(f"* Profile picture '{profile_pic_file}' already exists")
-                        print(f"* Profile picture has been added on {get_short_date_from_ts(profile_pic_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False)} ago)")
+                        print(
+                            f"* Profile picture has been added on {get_short_date_from_ts(profile_pic_mdate_dt, True)} ({calculate_timespan(now_local(), profile_pic_mdate_dt, show_seconds=False)} ago)"
+                        )
                         try:
                             if imgcat_exe:
-                                subprocess.run(f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {profile_pic_file}", shell=True, check=True)
+                                subprocess.run(
+                                    f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {profile_pic_file}",
+                                    shell=True,
+                                    check=True,
+                                )
                         except Exception:
                             pass
                     try:
@@ -1144,14 +1331,18 @@ def detect_changed_profile_picture(user, profile_image_url, profile_pic_file, pr
         else:
             print(f"* Error while checking if the profile picture has changed !")
             if func_ver == 2:
-                print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+                print(
+                    f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+                )
                 print_cur_ts("Timestamp:\t\t")
         if func_ver == 1:
             print_cur_ts("\nTimestamp:\t\t")
 
 
 # Return the most recent post and/or reel for the user (GraphQL helper when logged in)
-def latest_post_reel(user: str, bot: instaloader.Instaloader) -> Optional[Tuple[instaloader.Post, str]]:
+def latest_post_reel(
+    user: str, bot: instaloader.Instaloader
+) -> Optional[Tuple[instaloader.Post, str]]:
     profile = instaloader.Profile.from_username(bot.context, user)
 
     # Max 3 pinned posts + the latest one
@@ -1183,8 +1374,12 @@ def latest_post_mobile(user: str, bot: instaloader.Instaloader):
         video_url: Optional[str]
         mediaid: str
 
-    data = bot.context.get_iphone_json(f"api/v1/users/web_profile_info/?username={user}", {})
-    edges = data["data"]["user"].get("edge_owner_to_timeline_media", {}).get("edges", [])
+    data = bot.context.get_iphone_json(
+        f"api/v1/users/web_profile_info/?username={user}", {}
+    )
+    edges = (
+        data["data"]["user"].get("edge_owner_to_timeline_media", {}).get("edges", [])
+    )
 
     if not edges:
         return None
@@ -1196,7 +1391,12 @@ def latest_post_mobile(user: str, bot: instaloader.Instaloader):
     p.date_utc = datetime.fromtimestamp(node["taken_at_timestamp"], timezone.utc)
     p.likes = node["edge_liked_by"]["count"]
     p.comments = node["edge_media_to_comment"]["count"]
-    p.caption = node.get("edge_media_to_caption", {}).get("edges", [{}])[0].get("node", {}).get("text", "")
+    p.caption = (
+        node.get("edge_media_to_caption", {})
+        .get("edges", [{}])[0]
+        .get("node", {})
+        .get("text", "")
+    )
     p.pcaption = ""
     p.tagged_users = []
     p.shortcode = node["shortcode"]
@@ -1219,7 +1419,7 @@ def get_reels_count_mobile(user: str, bot: instaloader.Instaloader):
     u = data.get("user", {})
 
     # posts_count = u.get("media_count", 0)
-    reels_count = (u.get("reel_count") or u.get("total_clips_count", 0))
+    reels_count = u.get("reel_count") or u.get("total_clips_count", 0)
 
     return reels_count
 
@@ -1249,7 +1449,9 @@ def get_total_reels_count(user: str, bot: instaloader.Instaloader, skip_session=
 def check_posts_counts(user, posts_count, posts_count_old, r_sleep_time):
 
     if posts_count != posts_count_old:
-        print(f"* Posts number changed for user {user} from {posts_count_old} to {posts_count}\n")
+        print(
+            f"* Posts number changed for user {user} from {posts_count_old} to {posts_count}\n"
+        )
 
         if STATUS_NOTIFICATION:
             m_subject = f"Instagram user {user} posts number has changed! ({posts_count_old} -> {posts_count})"
@@ -1258,7 +1460,9 @@ def check_posts_counts(user, posts_count, posts_count_old, r_sleep_time):
             print(f"Sending email notification to {RECEIVER_EMAIL}\n")
             send_email(m_subject, m_body, "", SMTP_SSL)
 
-        print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+        print(
+            f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+        )
         print_cur_ts("Timestamp:\t\t")
         return 1
     else:
@@ -1269,7 +1473,9 @@ def check_posts_counts(user, posts_count, posts_count_old, r_sleep_time):
 def check_reels_counts(user, reels_count, reels_count_old, r_sleep_time):
 
     if reels_count != reels_count_old:
-        print(f"* Reels number changed for user {user} from {reels_count_old} to {reels_count}\n")
+        print(
+            f"* Reels number changed for user {user} from {reels_count_old} to {reels_count}\n"
+        )
 
         if STATUS_NOTIFICATION:
             m_subject = f"Instagram user {user} reels number has changed! ({reels_count_old} -> {reels_count})"
@@ -1278,7 +1484,9 @@ def check_reels_counts(user, reels_count, reels_count_old, r_sleep_time):
             print(f"Sending email notification to {RECEIVER_EMAIL}\n")
             send_email(m_subject, m_body, "", SMTP_SSL)
 
-        print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+        print(
+            f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+        )
         print_cur_ts("Timestamp:\t\t")
         return 1
     else:
@@ -1286,7 +1494,9 @@ def check_reels_counts(user, reels_count, reels_count_old, r_sleep_time):
 
 
 # Returns the tagged location name of the post, we use mobile API JSON call since last_post.location does not work anymore
-def get_post_location_mobile(last_post: instaloader.Post, bot: instaloader.Instaloader) -> Optional[str]:
+def get_post_location_mobile(
+    last_post: instaloader.Post, bot: instaloader.Instaloader
+) -> Optional[str]:
 
     if not bot.context.is_logged_in:
         return None
@@ -1316,7 +1526,9 @@ def get_real_reel_code(bot: instaloader.Instaloader, username: str) -> Optional[
     try:
         ctx: Any = bot.context  # type: ignore
 
-        data = ctx.get_iphone_json(f"api/v1/users/web_profile_info/?username={username}", {})
+        data = ctx.get_iphone_json(
+            f"api/v1/users/web_profile_info/?username={username}", {}
+        )
         user = data["data"]["user"]
         edges = user.get("edge_reels_media", {}).get("edges", [])
         if not edges:
@@ -1437,11 +1649,11 @@ def resolve_executable(path):
 
 # Returns random web browser user agent string
 def get_random_user_agent() -> str:
-    browser = random.choice(['chrome', 'firefox', 'edge', 'safari'])
+    browser = random.choice(["chrome", "firefox", "edge", "safari"])
 
-    if browser == 'chrome':
-        os_choice = random.choice(['mac', 'windows'])
-        if os_choice == 'mac':
+    if browser == "chrome":
+        os_choice = random.choice(["mac", "windows"])
+        if os_choice == "mac":
             return (
                 f"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_{random.randrange(11, 15)}_{random.randrange(4, 9)}) "
                 f"AppleWebKit/{random.randrange(530, 537)}.{random.randrange(30, 37)} (KHTML, like Gecko) "
@@ -1458,15 +1670,15 @@ def get_random_user_agent() -> str:
                 f"Chrome/{chrome_version}.0.{build}.{patch} Safari/537.36"
             )
 
-    elif browser == 'firefox':
-        os_choice = random.choice(['windows', 'mac', 'linux'])
+    elif browser == "firefox":
+        os_choice = random.choice(["windows", "mac", "linux"])
         version = random.randint(90, 110)
-        if os_choice == 'windows':
+        if os_choice == "windows":
             return (
                 f"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:{version}.0) "
                 f"Gecko/20100101 Firefox/{version}.0"
             )
-        elif os_choice == 'mac':
+        elif os_choice == "mac":
             return (
                 f"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_{random.randrange(11, 15)}_{random.randrange(0, 10)}; rv:{version}.0) "
                 f"Gecko/20100101 Firefox/{version}.0"
@@ -1477,13 +1689,13 @@ def get_random_user_agent() -> str:
                 f"Gecko/20100101 Firefox/{version}.0"
             )
 
-    elif browser == 'edge':
-        os_choice = random.choice(['windows', 'mac'])
+    elif browser == "edge":
+        os_choice = random.choice(["windows", "mac"])
         chrome_version = random.randint(80, 105)
         build = random.randint(3000, 4500)
         patch = random.randint(60, 125)
         version_str = f"{chrome_version}.0.{build}.{patch}"
-        if os_choice == 'windows':
+        if os_choice == "windows":
             return (
                 f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 f"AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -1496,9 +1708,9 @@ def get_random_user_agent() -> str:
                 f"Version/{random.randint(13, 16)}.0 Safari/605.1.15 Edg/{version_str}"
             )
 
-    elif browser == 'safari':
-        os_choice = 'mac'
-        if os_choice == 'mac':
+    elif browser == "safari":
+        os_choice = "mac"
+        if os_choice == "mac":
             mac_major = random.randrange(11, 16)
             mac_minor = random.randrange(0, 10)
             webkit_major = random.randint(600, 610)
@@ -1525,27 +1737,31 @@ def get_random_mobile_user_agent() -> str:
 
     if random.choice([True, False]):
         device = "iPhone"
-        model, (width, height) = random.choice([
-            ("10,3", (1125, 2436)),  # X
-            ("11,2", (1125, 2436)),  # XS
-            ("12,5", (1242, 2688)),  # 11 Pro Max
-            ("13,4", (1284, 2778)),  # 12 Pro Max
-            ("14,2", (1179, 2532)),  # 13 Pro
-            ("14,4", (1080, 2340)),  # 13 mini
-            ("15,2", (1170, 2532)),  # 15
-            ("15,3", (1179, 2556)),  # 15 Pro
-            ("16,1", (1290, 2796)),  # 15 Pro Max
-        ])
+        model, (width, height) = random.choice(
+            [
+                ("10,3", (1125, 2436)),  # X
+                ("11,2", (1125, 2436)),  # XS
+                ("12,5", (1242, 2688)),  # 11 Pro Max
+                ("13,4", (1284, 2778)),  # 12 Pro Max
+                ("14,2", (1179, 2532)),  # 13 Pro
+                ("14,4", (1080, 2340)),  # 13 mini
+                ("15,2", (1170, 2532)),  # 15
+                ("15,3", (1179, 2556)),  # 15 Pro
+                ("16,1", (1290, 2796)),  # 15 Pro Max
+            ]
+        )
     else:
         device = "iPad"
-        model, (width, height) = random.choice([
-            ("7,11", (1620, 2160)),  # 7th Gen
-            ("13,4", (1668, 2388)),  # Pro 11"
-            ("13,8", (2048, 2732)),  # Pro 12.9"
-            ("14,5", (2360, 1640)),  # Air 5th Gen
-            ("15,1", (2048, 2732)),  # Pro 12.9 Gen 6
-            ("15,8", (1668, 2388)),  # Pro 11 3rd Gen
-        ])
+        model, (width, height) = random.choice(
+            [
+                ("7,11", (1620, 2160)),  # 7th Gen
+                ("13,4", (1668, 2388)),  # Pro 11"
+                ("13,8", (2048, 2732)),  # Pro 12.9"
+                ("14,5", (2360, 1640)),  # Air 5th Gen
+                ("15,1", (2048, 2732)),  # Pro 12.9 Gen 6
+                ("15,8", (1668, 2388)),  # Pro 11 3rd Gen
+            ]
+        )
 
     os_major = random.randint(12, 17)
     os_minor = random.randint(0, 5)
@@ -1557,7 +1773,7 @@ def get_random_mobile_user_agent() -> str:
 
     device_id = random.randint(10**14, 10**15 - 1)
 
-    return (f"Instagram {app_major}.{app_minor}.{app_patch}.{app_revision} ({device}{model}; iOS {os_major}_{os_minor}; {language}; {locale}; scale={scale:.2f}; {width}x{height}; {device_id}) AppleWebKit/420+")
+    return f"Instagram {app_major}.{app_minor}.{app_patch}.{app_revision} ({device}{model}; iOS {os_major}_{os_minor}; {language}; {locale}; scale={scale:.2f}; {width}x{height}; {device_id}) AppleWebKit/420+"
 
 
 # Monkey-patches Instagram request to add human-like jitter and back-off
@@ -1587,6 +1803,7 @@ def instagram_wrap_request(orig_request):
                 backoff *= 2
                 continue
             return resp
+
     return wrapper
 
 
@@ -1601,6 +1818,7 @@ def instagram_wrap_send(orig_send):
             print(f"[WRAP-SEND] {method} {url}")
         time.sleep(random.uniform(0.8, 3.0))
         return orig_send(*args, **kwargs)
+
     return wrapper
 
 
@@ -1679,8 +1897,710 @@ def simulate_human_actions(bot: instaloader.Instaloader, sleep_seconds: int) -> 
         print_cur_ts("\nTimestamp:\t\t")
 
 
-# Monitors activity of the specified Instagram user
-def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, skip_followings, skip_getting_story_details, skip_getting_posts_details, get_more_post_details):
+# Initialize shared bot instance for multi-user monitoring
+def init_shared_bot(skip_session):
+    if ENABLE_JITTER:
+        req.Session.request = instagram_wrap_request(req.Session.request)
+        req.Session.send = instagram_wrap_send(req.Session.send)
+
+    bot = instaloader.Instaloader(
+        user_agent=USER_AGENT, iphone_support=True, quiet=True
+    )
+    ctx = bot.context
+
+    if not skip_session and SESSION_USERNAME:
+        if SESSION_PASSWORD:
+            try:
+                bot.load_session_from_file(SESSION_USERNAME)
+            except FileNotFoundError:
+                bot.login(SESSION_USERNAME, SESSION_PASSWORD)
+                bot.save_session_to_file()
+            except instaloader.exceptions.BadCredentialsException:
+                bot.login(SESSION_USERNAME, SESSION_PASSWORD)
+                bot.save_session_to_file()
+        else:
+            try:
+                bot.load_session_from_file(SESSION_USERNAME)
+            except FileNotFoundError:
+                print(
+                    "* Error: No Instagram session file found, please run 'instaloader -l SESSION_USERNAME' to create one"
+                )
+                sys.exit(1)
+
+    # Mobile user agent patch for instaloader
+    patched = False
+    try:
+        for attr in ("iphone_headers", "_iphone_headers"):
+            if hasattr(ctx, attr):
+                getattr(ctx, attr)["User-Agent"] = USER_AGENT_MOBILE
+                patched = True
+                break
+
+        if not patched:
+            if hasattr(ctx, "get_iphone_json"):
+                orig_get_iphone_json = ctx.get_iphone_json
+
+                def _get_iphone_json(path, params, **kwargs):
+                    if "_extra_headers" in kwargs:
+                        kwargs["_extra_headers"]["User-Agent"] = USER_AGENT_MOBILE
+                    else:
+                        kwargs["_extra_headers"] = {"User-Agent": USER_AGENT_MOBILE}
+                    return orig_get_iphone_json(path, params, **kwargs)
+
+                ctx.get_iphone_json = _get_iphone_json
+            else:
+                print(
+                    "* Warning: Could not apply custom mobile user-agent patch (missing header attributes or get_iphone_json method)!"
+                )
+                print("* Proceeding with the default Instaloader mobile user-agent")
+    except Exception as e:
+        print(
+            f"* Warning: Could not apply custom mobile user-agent patch due to an unexpected error: {e}"
+        )
+        print("* Proceeding with the default Instaloader mobile user-agent")
+
+    return bot
+
+
+# Initialize state for a single user (used by multi-user monitoring)
+def init_user_state(
+    user,
+    bot,
+    csv_file_name,
+    skip_session,
+    skip_followers,
+    skip_followings,
+    skip_getting_story_details,
+    skip_getting_posts_details,
+    get_more_post_details,
+):
+    state = {
+        "user": user,
+        "csv_file_name": csv_file_name,
+        "skip_session": skip_session,
+        "skip_followers": skip_followers,
+        "skip_followings": skip_followings,
+        "skip_getting_story_details": skip_getting_story_details,
+        "skip_getting_posts_details": skip_getting_posts_details,
+        "get_more_post_details": get_more_post_details,
+        "bot": bot,
+        "initialized": False,
+        "error": None,
+    }
+
+    try:
+        if csv_file_name:
+            init_csv_file(csv_file_name)
+    except Exception as e:
+        print(f"* Error initializing CSV for {user}: {e}")
+
+    try:
+        print(
+            f"\nSneaking into Instagram for user {user} ... (be patient, secrets take time)"
+        )
+
+        profile = instaloader.Profile.from_username(bot.context, user)
+        time.sleep(NEXT_OPERATION_DELAY)
+
+        state["insta_username"] = profile.username
+        state["insta_userid"] = profile.userid
+        state["followers_count"] = profile.followers
+        state["followings_count"] = profile.followees
+        state["bio"] = profile.biography
+        state["is_private"] = profile.is_private
+        state["followed_by_viewer"] = profile.followed_by_viewer
+        state["can_view"] = (not profile.is_private) or profile.followed_by_viewer
+        state["posts_count"] = profile.mediacount
+
+        if not skip_session and state["can_view"]:
+            state["reels_count"] = get_total_reels_count(user, bot, skip_session)
+        else:
+            state["reels_count"] = 0
+
+        if not state["is_private"]:
+            if bot.context.is_logged_in:
+                state["has_story"] = profile.has_public_story
+            else:
+                state["has_story"] = False
+        elif bot.context.is_logged_in and state["followed_by_viewer"]:
+            story = next(bot.get_stories(userids=[state["insta_userid"]]), None)
+            state["has_story"] = bool(story and story.itemcount)
+        else:
+            state["has_story"] = False
+
+        state["profile_image_url"] = profile.profile_pic_url_no_iphone
+
+        # Store old values for comparison
+        state["followers_old_count"] = state["followers_count"]
+        state["followings_old_count"] = state["followings_count"]
+        state["bio_old"] = state["bio"]
+        state["posts_count_old"] = state["posts_count"]
+        state["reels_count_old"] = state["reels_count"]
+        state["is_private_old"] = state["is_private"]
+        state["followed_by_viewer_old"] = state["followed_by_viewer"]
+        state["stories_count"] = 0
+        state["stories_old_count"] = 0
+
+        # File names for this user
+        state["insta_followers_file"] = f"instagram_{user}_followers.json"
+        state["insta_followings_file"] = f"instagram_{user}_followings.json"
+        state["profile_pic_file"] = f"instagram_{user}_profile_pic.jpeg"
+        state["profile_pic_file_old"] = f"instagram_{user}_profile_pic_old.jpeg"
+        state["profile_pic_file_tmp"] = f"instagram_{user}_profile_pic_tmp.jpeg"
+
+        # Initialize followers/followings lists
+        state["followers"] = []
+        state["followings"] = []
+        state["followers_old"] = []
+        state["followings_old"] = []
+        state["processed_stories_list"] = []
+
+        # Load existing followers from file
+        if os.path.isfile(state["insta_followers_file"]):
+            try:
+                with open(state["insta_followers_file"], "r", encoding="utf-8") as f:
+                    followers_read = json.load(f)
+                if followers_read:
+                    state["followers_old_count"] = followers_read[0]
+                    state["followers_old"] = followers_read[1]
+                    if state["followers_count"] == state["followers_old_count"]:
+                        state["followers"] = state["followers_old"]
+                    followers_mdate = datetime.fromtimestamp(
+                        int(os.path.getmtime(state["insta_followers_file"])),
+                        pytz.timezone(LOCAL_TIMEZONE),
+                    )
+                    print(
+                        f"* Followers ({state['followers_old_count']}) loaded from file '{state['insta_followers_file']}' ({get_short_date_from_ts(followers_mdate, show_weekday=False, always_show_year=True)})"
+                    )
+            except Exception as e:
+                print(
+                    f"* Cannot load followers list from '{state['insta_followers_file']}' file: {e}"
+                )
+
+        # Load existing followings from file
+        if os.path.isfile(state["insta_followings_file"]):
+            try:
+                with open(state["insta_followings_file"], "r", encoding="utf-8") as f:
+                    followings_read = json.load(f)
+                if followings_read:
+                    state["followings_old_count"] = followings_read[0]
+                    state["followings_old"] = followings_read[1]
+                    if state["followings_count"] == state["followings_old_count"]:
+                        state["followings"] = state["followings_old"]
+                    following_mdate = datetime.fromtimestamp(
+                        int(os.path.getmtime(state["insta_followings_file"])),
+                        pytz.timezone(LOCAL_TIMEZONE),
+                    )
+                    print(
+                        f"* Followings ({state['followings_old_count']}) loaded from file '{state['insta_followings_file']}' ({get_short_date_from_ts(following_mdate, show_weekday=False, always_show_year=True)})"
+                    )
+            except Exception as e:
+                print(
+                    f"* Cannot load followings list from '{state['insta_followings_file']}' file: {e}"
+                )
+
+        # Initialize post tracking
+        state["highestinsta_ts_old"] = int(time.time())
+        state["highestinsta_dt_old"] = now_local()
+        state["story_flag"] = False
+        state["email_sent"] = False
+        state["alive_counter"] = 0
+
+        # Print user info
+        if bot.context.is_logged_in:
+            me = instaloader.Profile.own_profile(bot.context)
+            session_username = me.username
+        else:
+            session_username = None
+
+        print(f"\nSession user:\t\t{session_username or '<anonymous>'}")
+        print(f"\nUsername:\t\t{state['insta_username']}")
+        print(f"User ID:\t\t{state['insta_userid']}")
+        print(f"URL:\t\t\thttps://www.instagram.com/{state['insta_username']}/")
+        print(f"\nProfile:\t\t{'public' if not state['is_private'] else 'private'}")
+        print(f"Can view all contents:\t{'Yes' if state['can_view'] else 'No'}")
+        print(f"\nPosts:\t\t\t{state['posts_count']}")
+        if not skip_session and state["can_view"]:
+            print(f"Reels:\t\t\t{state['reels_count']}")
+        print(f"\nFollowers:\t\t{state['followers_count']}")
+        print(f"Followings:\t\t{state['followings_count']}")
+        if bot.context.is_logged_in:
+            print(f"\nStory available:\t{state['has_story']}")
+        print(f"\nBio:\n\n{state['bio']}\n")
+        print_cur_ts("Timestamp:\t\t")
+
+        # Download initial profile picture
+        if DETECT_CHANGED_PROFILE_PIC:
+            try:
+                detect_changed_profile_picture(
+                    user,
+                    state["profile_image_url"],
+                    state["profile_pic_file"],
+                    state["profile_pic_file_tmp"],
+                    state["profile_pic_file_old"],
+                    PROFILE_PIC_FILE_EMPTY,
+                    csv_file_name,
+                    0,
+                    False,
+                    1,
+                )
+            except Exception as e:
+                print(f"* Error while processing initial profile picture: {e}")
+
+        # Fetch and download initial post details
+        if (
+            int(state["posts_count"] + state["reels_count"]) >= 1
+            and state["can_view"]
+            and not skip_getting_posts_details
+        ):
+            if bot.context.is_logged_in:
+                print("Fetching user's latest post/reel ...\n")
+            else:
+                print("Fetching user's latest post ...\n")
+            try:
+                time.sleep(NEXT_OPERATION_DELAY)
+                if bot.context.is_logged_in:
+                    last_post_reel = latest_post_reel(user, bot)
+                else:
+                    last_post_reel = latest_post_mobile(user, bot)
+
+                if last_post_reel:
+                    last_post, last_source = last_post_reel
+                    utc_dt = last_post.date_utc
+                    local_dt = convert_utc_datetime_to_tz_datetime(utc_dt)
+                    if local_dt:
+                        local_ts = int(local_dt.timestamp())
+                    else:
+                        local_ts = 0
+
+                    state["highestinsta_ts_old"] = local_ts
+                    state["highestinsta_dt_old"] = local_dt
+
+                    likes = last_post.likes
+                    comments = last_post.comments
+                    caption = (
+                        last_post.caption
+                        if last_post.caption is not None
+                        else "(empty)"
+                    )
+                    tagged_users = last_post.tagged_users
+                    if last_source == "reel":
+                        shortcode = get_real_reel_code(bot, user) or last_post.shortcode
+                    else:
+                        shortcode = last_post.shortcode
+                    thumbnail_url = last_post.url
+                    video_url = last_post.video_url
+                    if last_source == "post":
+                        location = get_post_location_mobile(last_post, bot)
+                    else:
+                        location = None
+
+                    post_url = f"https://www.instagram.com/{'reel' if last_source == 'reel' else 'p'}/{shortcode}/"
+                    print(f"* Newest {last_source.lower()} for user {user}:\n")
+                    print(
+                        f"Date:\t\t\t{get_date_from_ts(local_dt)} ({calculate_timespan(now_local(), local_dt)} ago)"
+                    )
+                    print(f"{last_source.capitalize()} URL:\t\t{post_url}")
+                    print(
+                        f"Profile URL:\t\thttps://www.instagram.com/{state['insta_username']}/"
+                    )
+                    print(f"Likes:\t\t\t{likes}")
+                    print(f"Comments:\t\t{comments}")
+                    print(f"Tagged users:\t\t{tagged_users}")
+                    if location:
+                        print(f"Location:\t\t{location}")
+                    print(f"Description:\n\n{caption}\n")
+
+                    # Download video if available
+                    if video_url:
+                        if local_dt:
+                            video_filename = f'instagram_{user}_{last_source.lower()}_{local_dt.strftime("%Y%m%d_%H%M%S")}.mp4'
+                        else:
+                            video_filename = f'instagram_{user}_{last_source.lower()}_{now_local().strftime("%Y%m%d_%H%M%S")}.mp4'
+                        if not os.path.isfile(video_filename):
+                            if save_pic_video(video_url, video_filename, local_ts):
+                                print(
+                                    f"{last_source.capitalize()} video saved to '{video_filename}'"
+                                )
+
+                    # Download thumbnail if available
+                    if thumbnail_url:
+                        if local_dt:
+                            image_filename = f'instagram_{user}_{last_source.lower()}_{local_dt.strftime("%Y%m%d_%H%M%S")}.jpeg'
+                        else:
+                            image_filename = f'instagram_{user}_{last_source.lower()}_{now_local().strftime("%Y%m%d_%H%M%S")}.jpeg'
+                        if not os.path.isfile(image_filename):
+                            if save_pic_video(thumbnail_url, image_filename, local_ts):
+                                print(
+                                    f"{last_source.capitalize()} thumbnail image saved to '{image_filename}'"
+                                )
+                        if os.path.isfile(image_filename):
+                            try:
+                                if imgcat_exe:
+                                    subprocess.run(
+                                        f"{imgcat_exe} {image_filename}",
+                                        shell=True,
+                                        check=True,
+                                    )
+                            except Exception:
+                                pass
+
+                    print_cur_ts("\nTimestamp:\t\t")
+                else:
+                    print(f"* Warning: Failed to get last post/reel details for {user}")
+
+            except Exception as e:
+                print(
+                    f"* Error while fetching initial posts/reels for {user}: {type(e).__name__}: {e}"
+                )
+
+        print("─" * HORIZONTAL_LINE)
+
+        state["initialized"] = True
+
+    except Exception as e:
+        print(f"* Error initializing user {user}: {type(e).__name__}: {e}")
+        state["error"] = str(e)
+
+    return state
+
+
+# Monitor multiple Instagram users in round-robin fashion
+def monitor_multiple_users(
+    usernames,
+    csv_file,
+    skip_session,
+    skip_followers,
+    skip_followings,
+    skip_getting_story_details,
+    skip_getting_posts_details,
+    get_more_post_details,
+):
+    print("Initializing shared Instagram session...")
+
+    try:
+        bot = init_shared_bot(skip_session)
+    except Exception as e:
+        print(f"* Error initializing Instagram session: {type(e).__name__}: {e}")
+        sys.exit(1)
+
+    # Initialize state for each user
+    user_states = []
+    for i, username in enumerate(usernames):
+        state = init_user_state(
+            username,
+            bot,
+            csv_file,
+            skip_session,
+            skip_followers,
+            skip_followings,
+            skip_getting_story_details,
+            skip_getting_posts_details,
+            get_more_post_details,
+        )
+        if state["initialized"]:
+            user_states.append(state)
+        else:
+            print(f"* Warning: Skipping user {username} due to initialization error")
+
+        # Add delay between users to avoid rate limiting
+        if i < len(usernames) - 1:
+            delay = random.randint(3, 8)
+            print(f"\n* Waiting {delay}s before initializing next user...")
+            time.sleep(delay)
+
+    if not user_states:
+        print("* Error: No users could be initialized successfully")
+        sys.exit(1)
+
+    print(f"\n{'=' * 80}")
+    print(
+        f"Monitoring {len(user_states)} user(s): {', '.join(s['user'] for s in user_states)}"
+    )
+    print(f"{'=' * 80}\n")
+
+    r_sleep_time = randomize_number(
+        INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH
+    )
+    time.sleep(r_sleep_time)
+
+    alive_counter = 0
+
+    # Main monitoring loop
+    while True:
+        for state in user_states:
+            user = state["user"]
+            print(f"\n{'─' * 40}")
+            print(f"Checking user: {user}")
+            print(f"{'─' * 40}")
+
+            try:
+                check_user_iteration(state, bot, r_sleep_time)
+            except Exception as e:
+                print(f"* Error checking user {user}: {type(e).__name__}: {e}")
+                if ERROR_NOTIFICATION and not state.get("email_sent", False):
+                    m_subject = f"instagram_monitor: error checking user {user}"
+                    m_body = f"Error checking user {user}: {e}{get_cur_ts(nl_ch + nl_ch + 'Timestamp: ')}"
+                    send_email(m_subject, m_body, "", SMTP_SSL)
+                    state["email_sent"] = True
+
+            time.sleep(NEXT_OPERATION_DELAY)
+
+        alive_counter += 1
+
+        if LIVENESS_CHECK_COUNTER and alive_counter >= LIVENESS_CHECK_COUNTER:
+            print_cur_ts("\nLiveness check, timestamp:\t")
+            alive_counter = 0
+
+        r_sleep_time = randomize_number(
+            INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH
+        )
+
+        # Be human please (once per cycle, not per user)
+        try:
+            if BE_HUMAN:
+                simulate_human_actions(bot, r_sleep_time)
+        except Exception as e:
+            print(f"* Warning: Human simulation failed: {e}")
+            print_cur_ts("\nTimestamp:\t\t")
+
+        print(f"\nSleeping for {display_time(r_sleep_time)} before next check cycle...")
+        time.sleep(r_sleep_time)
+
+
+# Single iteration check for one user (used by multi-user monitoring)
+def check_user_iteration(state, bot, r_sleep_time):
+    user = state["user"]
+    csv_file_name = state["csv_file_name"]
+    skip_session = state["skip_session"]
+    skip_followers = state["skip_followers"]
+    skip_followings = state["skip_followings"]
+    skip_getting_story_details = state["skip_getting_story_details"]
+    skip_getting_posts_details = state["skip_getting_posts_details"]
+    get_more_post_details = state["get_more_post_details"]
+
+    global last_output
+    last_output = []
+
+    try:
+        profile = instaloader.Profile.from_username(bot.context, user)
+        time.sleep(NEXT_OPERATION_DELAY)
+
+        followers_count = profile.followers
+        followings_count = profile.followees
+        bio = profile.biography
+        is_private = profile.is_private
+        followed_by_viewer = profile.followed_by_viewer
+        can_view = (not is_private) or followed_by_viewer
+        posts_count = profile.mediacount
+
+        if not skip_session and can_view:
+            reels_count = get_total_reels_count(user, bot, skip_session)
+        else:
+            reels_count = state.get("reels_count", 0)
+
+        if not is_private:
+            if bot.context.is_logged_in:
+                has_story = profile.has_public_story
+            else:
+                has_story = False
+        elif bot.context.is_logged_in and followed_by_viewer:
+            story = next(bot.get_stories(userids=[state["insta_userid"]]), None)
+            has_story = bool(story and story.itemcount)
+        else:
+            has_story = False
+
+        profile_image_url = profile.profile_pic_url_no_iphone
+        state["email_sent"] = False
+
+    except Exception as e:
+        print(f"* Error fetching profile for {user}: {type(e).__name__}: {e}")
+        if "Redirected" in str(e) or "login" in str(e) or "Forbidden" in str(e):
+            print("* Session might not be valid anymore!")
+            if ERROR_NOTIFICATION and not state.get("email_sent", False):
+                m_subject = f"instagram_monitor: session error! (user: {user})"
+                m_body = f"Session might not be valid anymore: {e}{get_cur_ts(nl_ch + nl_ch + 'Timestamp: ')}"
+                send_email(m_subject, m_body, "", SMTP_SSL)
+                state["email_sent"] = True
+        return
+
+    # Check for followings changes
+    if followings_count != state["followings_old_count"]:
+        followings_diff = followings_count - state["followings_old_count"]
+        followings_diff_str = (
+            f"+{followings_diff}" if followings_diff > 0 else str(followings_diff)
+        )
+        print(
+            f"* Followings number changed by user {user} from {state['followings_old_count']} to {followings_count} ({followings_diff_str})"
+        )
+
+        try:
+            if csv_file_name:
+                write_csv_entry(
+                    csv_file_name,
+                    now_local_naive(),
+                    "Followings Count",
+                    state["followings_old_count"],
+                    followings_count,
+                )
+        except Exception as e:
+            print(f"* Error: {e}")
+
+        if STATUS_NOTIFICATION:
+            m_subject = f"Instagram user {user} followings number has changed! ({followings_diff_str}, {state['followings_old_count']} -> {followings_count})"
+            m_body = f"Followings number changed by user {user} from {state['followings_old_count']} to {followings_count} ({followings_diff_str})\n\nCheck interval: {display_time(r_sleep_time)}{get_cur_ts(nl_ch + 'Timestamp: ')}"
+            print(f"Sending email notification to {RECEIVER_EMAIL}")
+            send_email(m_subject, m_body, "", SMTP_SSL)
+
+        state["followings_old_count"] = followings_count
+
+    # Check for followers changes
+    if followers_count != state["followers_old_count"]:
+        followers_diff = followers_count - state["followers_old_count"]
+        followers_diff_str = (
+            f"+{followers_diff}" if followers_diff > 0 else str(followers_diff)
+        )
+        print(
+            f"* Followers number changed for user {user} from {state['followers_old_count']} to {followers_count} ({followers_diff_str})"
+        )
+
+        try:
+            if csv_file_name:
+                write_csv_entry(
+                    csv_file_name,
+                    now_local_naive(),
+                    "Followers Count",
+                    state["followers_old_count"],
+                    followers_count,
+                )
+        except Exception as e:
+            print(f"* Error: {e}")
+
+        if FOLLOWERS_NOTIFICATION:
+            m_subject = f"Instagram user {user} followers number has changed! ({followers_diff_str}, {state['followers_old_count']} -> {followers_count})"
+            m_body = f"Followers number changed for user {user} from {state['followers_old_count']} to {followers_count} ({followers_diff_str})\n\nCheck interval: {display_time(r_sleep_time)}{get_cur_ts(nl_ch + 'Timestamp: ')}"
+            print(f"Sending email notification to {RECEIVER_EMAIL}")
+            send_email(m_subject, m_body, "", SMTP_SSL)
+
+        state["followers_old_count"] = followers_count
+
+    # Check for bio changes
+    if bio != state["bio_old"]:
+        print(f"* Bio changed for user {user}")
+        print(f"Old bio:\n{state['bio_old']}\n")
+        print(f"New bio:\n{bio}\n")
+
+        try:
+            if csv_file_name:
+                write_csv_entry(
+                    csv_file_name, now_local_naive(), "Bio", state["bio_old"], bio
+                )
+        except Exception as e:
+            print(f"* Error: {e}")
+
+        if STATUS_NOTIFICATION:
+            m_subject = f"Instagram user {user} bio has changed!"
+            m_body = f"Bio changed for user {user}\n\nOld bio:\n{state['bio_old']}\n\nNew bio:\n{bio}\n\nCheck interval: {display_time(r_sleep_time)}{get_cur_ts(nl_ch + 'Timestamp: ')}"
+            print(f"Sending email notification to {RECEIVER_EMAIL}")
+            send_email(m_subject, m_body, "", SMTP_SSL)
+
+        state["bio_old"] = bio
+
+    # Check for visibility changes
+    if is_private != state["is_private_old"]:
+        visibility_change = "public to private" if is_private else "private to public"
+        print(f"* Profile visibility changed for user {user}: {visibility_change}")
+
+        try:
+            if csv_file_name:
+                write_csv_entry(
+                    csv_file_name,
+                    now_local_naive(),
+                    "Visibility",
+                    "private" if state["is_private_old"] else "public",
+                    "private" if is_private else "public",
+                )
+        except Exception as e:
+            print(f"* Error: {e}")
+
+        if STATUS_NOTIFICATION:
+            m_subject = f"Instagram user {user} profile visibility changed! ({visibility_change})"
+            m_body = f"Profile visibility changed for user {user}: {visibility_change}\n\nCheck interval: {display_time(r_sleep_time)}{get_cur_ts(nl_ch + 'Timestamp: ')}"
+            print(f"Sending email notification to {RECEIVER_EMAIL}")
+            send_email(m_subject, m_body, "", SMTP_SSL)
+
+        state["is_private_old"] = is_private
+
+    # Check for post count changes
+    if posts_count != state["posts_count_old"]:
+        posts_diff = posts_count - state["posts_count_old"]
+        posts_diff_str = f"+{posts_diff}" if posts_diff > 0 else str(posts_diff)
+        print(
+            f"* Posts count changed for user {user} from {state['posts_count_old']} to {posts_count} ({posts_diff_str})"
+        )
+
+        try:
+            if csv_file_name:
+                write_csv_entry(
+                    csv_file_name,
+                    now_local_naive(),
+                    "Posts Count",
+                    state["posts_count_old"],
+                    posts_count,
+                )
+        except Exception as e:
+            print(f"* Error: {e}")
+
+        if STATUS_NOTIFICATION:
+            m_subject = f"Instagram user {user} posts count changed! ({posts_diff_str}, {state['posts_count_old']} -> {posts_count})"
+            m_body = f"Posts count changed for user {user} from {state['posts_count_old']} to {posts_count} ({posts_diff_str})\n\nCheck interval: {display_time(r_sleep_time)}{get_cur_ts(nl_ch + 'Timestamp: ')}"
+            print(f"Sending email notification to {RECEIVER_EMAIL}")
+            send_email(m_subject, m_body, "", SMTP_SSL)
+
+        state["posts_count_old"] = posts_count
+
+    # Check for profile picture changes
+    if DETECT_CHANGED_PROFILE_PIC:
+        try:
+            detect_changed_profile_picture(
+                user,
+                profile_image_url,
+                state["profile_pic_file"],
+                state["profile_pic_file_tmp"],
+                state["profile_pic_file_old"],
+                PROFILE_PIC_FILE_EMPTY,
+                csv_file_name,
+                r_sleep_time,
+                False,
+                1,
+            )
+        except Exception as e:
+            print(f"* Error while processing changed profile picture: {e}")
+
+    # Update state
+    state["followers_count"] = followers_count
+    state["followings_count"] = followings_count
+    state["posts_count"] = posts_count
+    state["reels_count"] = reels_count
+    state["bio"] = bio
+    state["is_private"] = is_private
+    state["can_view"] = can_view
+    state["has_story"] = has_story
+
+    print_cur_ts("Timestamp:\t\t")
+
+
+# Monitors activity of the specified Instagram user (single user mode - legacy)
+def instagram_monitor_user(
+    user,
+    csv_file_name,
+    skip_session,
+    skip_followers,
+    skip_followings,
+    skip_getting_story_details,
+    skip_getting_posts_details,
+    get_more_post_details,
+):
 
     try:
         if csv_file_name:
@@ -1701,7 +2621,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             req.Session.request = instagram_wrap_request(req.Session.request)
             req.Session.send = instagram_wrap_send(req.Session.send)
 
-        bot = instaloader.Instaloader(user_agent=USER_AGENT, iphone_support=True, quiet=True)
+        bot = instaloader.Instaloader(
+            user_agent=USER_AGENT, iphone_support=True, quiet=True
+        )
 
         ctx = bot.context
 
@@ -1723,7 +2645,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 try:
                     bot.load_session_from_file(SESSION_USERNAME)
                 except FileNotFoundError:
-                    print("* Error: No Instagram session file found, please run 'instaloader -l SESSION_USERNAME' to create one")
+                    print(
+                        "* Error: No Instagram session file found, please run 'instaloader -l SESSION_USERNAME' to create one"
+                    )
                     sys.exit(1)
 
         patched = False
@@ -1738,25 +2662,31 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                     break
 
             if not patched:
-                if hasattr(ctx, 'get_iphone_json'):
+                if hasattr(ctx, "get_iphone_json"):
                     orig_get_iphone_json = ctx.get_iphone_json
 
                     def _get_iphone_json(path, params, **kwargs):
-                        if '_extra_headers' in kwargs:
-                            kwargs['_extra_headers']['User-Agent'] = USER_AGENT_MOBILE
+                        if "_extra_headers" in kwargs:
+                            kwargs["_extra_headers"]["User-Agent"] = USER_AGENT_MOBILE
                         else:
-                            kwargs['_extra_headers'] = {'User-Agent': USER_AGENT_MOBILE}
+                            kwargs["_extra_headers"] = {"User-Agent": USER_AGENT_MOBILE}
                         return orig_get_iphone_json(path, params, **kwargs)
 
                     ctx.get_iphone_json = _get_iphone_json
                 else:
-                    print("* Warning: Could not apply custom mobile user-agent patch (missing header attributes or get_iphone_json method)!")
+                    print(
+                        "* Warning: Could not apply custom mobile user-agent patch (missing header attributes or get_iphone_json method)!"
+                    )
                     print("* Proceeding with the default Instaloader mobile user-agent")
         except Exception as e:
-            print(f"* Warning: Could not apply custom mobile user-agent patch due to an unexpected error: {e}")
+            print(
+                f"* Warning: Could not apply custom mobile user-agent patch due to an unexpected error: {e}"
+            )
             print("* Proceeding with the default Instaloader mobile user-agent")
 
-        print("Sneaking into Instagram like a ninja ... (be patient, secrets take time)")
+        print(
+            "Sneaking into Instagram like a ninja ... (be patient, secrets take time)"
+        )
 
         profile = instaloader.Profile.from_username(bot.context, user)
         time.sleep(NEXT_OPERATION_DELAY)
@@ -1842,17 +2772,24 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
     if os.path.isfile(insta_followers_file):
         try:
-            with open(insta_followers_file, 'r', encoding="utf-8") as f:
+            with open(insta_followers_file, "r", encoding="utf-8") as f:
                 followers_read = json.load(f)
         except Exception as e:
-            print(f"* Cannot load followers list from '{insta_followers_file}' file: {e}")
+            print(
+                f"* Cannot load followers list from '{insta_followers_file}' file: {e}"
+            )
         if followers_read:
             followers_old_count = followers_read[0]
             followers_old = followers_read[1]
             if followers_count == followers_old_count:
                 followers = followers_old
-            followers_mdate = datetime.fromtimestamp(int(os.path.getmtime(insta_followers_file)), pytz.timezone(LOCAL_TIMEZONE))
-            print(f"* Followers ({followers_old_count}) loaded from file '{insta_followers_file}' ({get_short_date_from_ts(followers_mdate, show_weekday=False, always_show_year=True)})")
+            followers_mdate = datetime.fromtimestamp(
+                int(os.path.getmtime(insta_followers_file)),
+                pytz.timezone(LOCAL_TIMEZONE),
+            )
+            print(
+                f"* Followers ({followers_old_count}) loaded from file '{insta_followers_file}' ({get_short_date_from_ts(followers_mdate, show_weekday=False, always_show_year=True)})"
+            )
             followers_followings_fetched = True
 
     if followers_count != followers_old_count:
@@ -1862,16 +2799,32 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             followers_diff_str = "+" + str(followers_diff)
         else:
             followers_diff_str = str(followers_diff)
-        print(f"* Followers number changed for user {user} from {followers_old_count} to {followers_count} ({followers_diff_str})")
+        print(
+            f"* Followers number changed for user {user} from {followers_old_count} to {followers_count} ({followers_diff_str})"
+        )
         followers_followings_fetched = True
 
         try:
             if csv_file_name:
-                write_csv_entry(csv_file_name, now_local_naive(), "Followers Count", followers_old_count, followers_count)
+                write_csv_entry(
+                    csv_file_name,
+                    now_local_naive(),
+                    "Followers Count",
+                    followers_old_count,
+                    followers_count,
+                )
         except Exception as e:
             print(f"* Error: {e}")
 
-    if ((followers_count != followers_old_count) or (followers_count > 0 and not followers)) and not skip_session and not skip_followers and can_view:
+    if (
+        (
+            (followers_count != followers_old_count)
+            or (followers_count > 0 and not followers)
+        )
+        and not skip_session
+        and not skip_followers
+        and can_view
+    ):
         print("\n* Getting followers ...")
         followers_followings_fetched = True
 
@@ -1889,13 +2842,24 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             followers_to_save.append(followers_count)
             followers_to_save.append(followers)
             try:
-                with open(insta_followers_file, 'w', encoding="utf-8") as f:
+                with open(insta_followers_file, "w", encoding="utf-8") as f:
                     json.dump(followers_to_save, f, indent=2)
                     print(f"* Followers saved to file '{insta_followers_file}'")
             except Exception as e:
-                print(f"* Cannot save list of followers to '{insta_followers_file}' file: {e}")
+                print(
+                    f"* Cannot save list of followers to '{insta_followers_file}' file: {e}"
+                )
 
-    if ((followers_count != followers_old_count) and (followers != followers_old)) and not skip_session and not skip_followers and can_view and ((followers and followers_count > 0) or (not followers and followers_count == 0)):
+    if (
+        ((followers_count != followers_old_count) and (followers != followers_old))
+        and not skip_session
+        and not skip_followers
+        and can_view
+        and (
+            (followers and followers_count > 0)
+            or (not followers and followers_count == 0)
+        )
+    ):
         a, b = set(followers_old), set(followers)
         removed_followers = list(a - b)
         added_followers = list(b - a)
@@ -1908,10 +2872,18 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             print("Removed followers:\n")
             for f_in_list in removed_followers:
                 print(f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]")
-                removed_followers_list += f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
+                removed_followers_list += (
+                    f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
+                )
                 try:
                     if csv_file_name:
-                        write_csv_entry(csv_file_name, now_local_naive(), "Removed Followers", f_in_list, "")
+                        write_csv_entry(
+                            csv_file_name,
+                            now_local_naive(),
+                            "Removed Followers",
+                            f_in_list,
+                            "",
+                        )
                 except Exception as e:
                     print(f"* Error: {e}")
             print()
@@ -1920,27 +2892,42 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             print("Added followers:\n")
             for f_in_list in added_followers:
                 print(f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]")
-                added_followers_list += f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
+                added_followers_list += (
+                    f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
+                )
                 try:
                     if csv_file_name:
-                        write_csv_entry(csv_file_name, now_local_naive(), "Added Followers", "", f_in_list)
+                        write_csv_entry(
+                            csv_file_name,
+                            now_local_naive(),
+                            "Added Followers",
+                            "",
+                            f_in_list,
+                        )
                 except Exception as e:
                     print(f"* Error: {e}")
             print()
 
     if os.path.isfile(insta_followings_file):
         try:
-            with open(insta_followings_file, 'r', encoding="utf-8") as f:
+            with open(insta_followings_file, "r", encoding="utf-8") as f:
                 followings_read = json.load(f)
         except Exception as e:
-            print(f"* Cannot load followings list from '{insta_followings_file}' file: {e}")
+            print(
+                f"* Cannot load followings list from '{insta_followings_file}' file: {e}"
+            )
         if followings_read:
             followings_old_count = followings_read[0]
             followings_old = followings_read[1]
             if followings_count == followings_old_count:
                 followings = followings_old
-            following_mdate = datetime.fromtimestamp(int(os.path.getmtime(insta_followings_file)), pytz.timezone(LOCAL_TIMEZONE))
-            print(f"\n* Followings ({followings_old_count}) loaded from file '{insta_followings_file}' ({get_short_date_from_ts(following_mdate, show_weekday=False, always_show_year=True)})")
+            following_mdate = datetime.fromtimestamp(
+                int(os.path.getmtime(insta_followings_file)),
+                pytz.timezone(LOCAL_TIMEZONE),
+            )
+            print(
+                f"\n* Followings ({followings_old_count}) loaded from file '{insta_followings_file}' ({get_short_date_from_ts(following_mdate, show_weekday=False, always_show_year=True)})"
+            )
             followers_followings_fetched = True
 
     if followings_count != followings_old_count:
@@ -1950,15 +2937,31 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             followings_diff_str = "+" + str(followings_diff)
         else:
             followings_diff_str = str(followings_diff)
-        print(f"* Followings number changed by user {user} from {followings_old_count} to {followings_count} ({followings_diff_str})")
+        print(
+            f"* Followings number changed by user {user} from {followings_old_count} to {followings_count} ({followings_diff_str})"
+        )
         followers_followings_fetched = True
         try:
             if csv_file_name:
-                write_csv_entry(csv_file_name, now_local_naive(), "Followings Count", followings_old_count, followings_count)
+                write_csv_entry(
+                    csv_file_name,
+                    now_local_naive(),
+                    "Followings Count",
+                    followings_old_count,
+                    followings_count,
+                )
         except Exception as e:
             print(f"* Error: {e}")
 
-    if ((followings_count != followings_old_count) or (followings_count > 0 and not followings)) and not skip_session and not skip_followings and can_view:
+    if (
+        (
+            (followings_count != followings_old_count)
+            or (followings_count > 0 and not followings)
+        )
+        and not skip_session
+        and not skip_followings
+        and can_view
+    ):
         print("\n* Getting followings ...")
         followers_followings_fetched = True
 
@@ -1976,13 +2979,24 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             followings_to_save.append(followings_count)
             followings_to_save.append(followings)
             try:
-                with open(insta_followings_file, 'w', encoding="utf-8") as f:
+                with open(insta_followings_file, "w", encoding="utf-8") as f:
                     json.dump(followings_to_save, f, indent=2)
                     print(f"* Followings saved to file '{insta_followings_file}'")
             except Exception as e:
-                print(f"* Cannot save list of followings to '{insta_followings_file}' file: {e}")
+                print(
+                    f"* Cannot save list of followings to '{insta_followings_file}' file: {e}"
+                )
 
-    if ((followings_count != followings_old_count) and (followings != followings_old)) and not skip_session and not skip_followings and can_view and ((followings and followings_count > 0) or (not followings and followings_count == 0)):
+    if (
+        ((followings_count != followings_old_count) and (followings != followings_old))
+        and not skip_session
+        and not skip_followings
+        and can_view
+        and (
+            (followings and followings_count > 0)
+            or (not followings and followings_count == 0)
+        )
+    ):
         a, b = set(followings_old), set(followings)
         removed_followings = list(a - b)
         added_followings = list(b - a)
@@ -1995,10 +3009,18 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             print("Removed followings:\n")
             for f_in_list in removed_followings:
                 print(f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]")
-                removed_followings_list += f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
+                removed_followings_list += (
+                    f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
+                )
                 try:
                     if csv_file_name:
-                        write_csv_entry(csv_file_name, now_local_naive(), "Removed Followings", f_in_list, "")
+                        write_csv_entry(
+                            csv_file_name,
+                            now_local_naive(),
+                            "Removed Followings",
+                            f_in_list,
+                            "",
+                        )
                 except Exception as e:
                     print(f"* Error: {e}")
             print()
@@ -2007,10 +3029,18 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             print("Added followings:\n")
             for f_in_list in added_followings:
                 print(f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]")
-                added_followings_list += f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
+                added_followings_list += (
+                    f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
+                )
                 try:
                     if csv_file_name:
-                        write_csv_entry(csv_file_name, now_local_naive(), "Added Followings", "", f_in_list)
+                        write_csv_entry(
+                            csv_file_name,
+                            now_local_naive(),
+                            "Added Followings",
+                            "",
+                            f_in_list,
+                        )
                 except Exception as e:
                     print(f"* Error: {e}")
             print()
@@ -2036,7 +3066,18 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
     if DETECT_CHANGED_PROFILE_PIC:
 
         try:
-            detect_changed_profile_picture(user, profile_image_url, profile_pic_file, profile_pic_file_tmp, profile_pic_file_old, PROFILE_PIC_FILE_EMPTY, csv_file_name, r_sleep_time, False, 1)
+            detect_changed_profile_picture(
+                user,
+                profile_image_url,
+                profile_pic_file,
+                profile_pic_file_tmp,
+                profile_pic_file_old,
+                PROFILE_PIC_FILE_EMPTY,
+                csv_file_name,
+                r_sleep_time,
+                False,
+                1,
+            )
         except Exception as e:
             print(f"* Error while processing changed profile picture: {e}")
 
@@ -2070,7 +3111,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                         processed_stories_list.append(local_ts)
 
                         expire_utc_dt = story_item.expiring_utc
-                        expire_local_dt = convert_utc_datetime_to_tz_datetime(expire_utc_dt)
+                        expire_local_dt = convert_utc_datetime_to_tz_datetime(
+                            expire_utc_dt
+                        )
                         if expire_local_dt:
                             expire_ts = int(expire_local_dt.timestamp())
                         else:
@@ -2108,8 +3151,12 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                             else:
                                 story_video_filename = f'instagram_{user}_story_{now_local().strftime("%Y%m%d_%H%M%S")}.mp4'
                             if not os.path.isfile(story_video_filename):
-                                if save_pic_video(story_video_url, story_video_filename, local_ts):
-                                    print(f"Story video saved to '{story_video_filename}'")
+                                if save_pic_video(
+                                    story_video_url, story_video_filename, local_ts
+                                ):
+                                    print(
+                                        f"Story video saved to '{story_video_filename}'"
+                                    )
 
                         if story_thumbnail_url:
                             if local_dt:
@@ -2117,12 +3164,20 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                             else:
                                 story_image_filename = f'instagram_{user}_story_{now_local().strftime("%Y%m%d_%H%M%S")}.jpeg'
                             if not os.path.isfile(story_image_filename):
-                                if save_pic_video(story_thumbnail_url, story_image_filename, local_ts):
-                                    print(f"Story thumbnail image saved to '{story_image_filename}'")
+                                if save_pic_video(
+                                    story_thumbnail_url, story_image_filename, local_ts
+                                ):
+                                    print(
+                                        f"Story thumbnail image saved to '{story_image_filename}'"
+                                    )
                             if os.path.isfile(story_image_filename):
                                 try:
                                     if imgcat_exe:
-                                        subprocess.run(f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {story_image_filename}", shell=True, check=True)
+                                        subprocess.run(
+                                            f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {story_image_filename}",
+                                            shell=True,
+                                            check=True,
+                                        )
                                         if i < stories_count:
                                             print()
                                 except Exception:
@@ -2130,7 +3185,13 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
                         try:
                             if csv_file_name:
-                                write_csv_entry(csv_file_name, convert_to_local_naive(local_dt), "New Story Item", "", story_type)
+                                write_csv_entry(
+                                    csv_file_name,
+                                    convert_to_local_naive(local_dt),
+                                    "New Story Item",
+                                    "",
+                                    story_type,
+                                )
                         except Exception as e:
                             print(f"* Error: {e}")
 
@@ -2165,7 +3226,11 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
     thumbnail_url = ""
     video_url = ""
 
-    if int(posts_count + reels_count) >= 1 and can_view and not skip_getting_posts_details:
+    if (
+        int(posts_count + reels_count) >= 1
+        and can_view
+        and not skip_getting_posts_details
+    ):
         if bot.context.is_logged_in:
             print("Fetching user's latest post/reel ...\n")
         else:
@@ -2193,7 +3258,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             if last_post:
                 likes = last_post.likes
                 comments = last_post.comments
-                caption = last_post.caption if last_post.caption is not None else "(empty)"
+                caption = (
+                    last_post.caption if last_post.caption is not None else "(empty)"
+                )
                 pcaption = last_post.pcaption or ""
                 tagged_users = last_post.tagged_users
                 if last_source == "reel":
@@ -2216,18 +3283,40 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             if not skip_session and get_more_post_details and last_post:
                 likes_list = last_post.get_likes()
                 for like in likes_list:
-                    likes_users_list += "- " + like.username + " [ " + "https://www.instagram.com/" + like.username + "/ ]\n"
+                    likes_users_list += (
+                        "- "
+                        + like.username
+                        + " [ "
+                        + "https://www.instagram.com/"
+                        + like.username
+                        + "/ ]\n"
+                    )
                 comments_list = last_post.get_comments()
                 for comment in comments_list:
-                    comment_created_at = convert_utc_datetime_to_tz_datetime(comment.created_at_utc)
+                    comment_created_at = convert_utc_datetime_to_tz_datetime(
+                        comment.created_at_utc
+                    )
                     if comment_created_at:
-                        post_comments_list += "\n[ " + get_short_date_from_ts(comment_created_at) + " - " + "https://www.instagram.com/" + comment.owner.username + "/ ]\n" + comment.text + "\n"
+                        post_comments_list += (
+                            "\n[ "
+                            + get_short_date_from_ts(comment_created_at)
+                            + " - "
+                            + "https://www.instagram.com/"
+                            + comment.owner.username
+                            + "/ ]\n"
+                            + comment.text
+                            + "\n"
+                        )
         except Exception as e:
-            print(f"* Error while getting post's likes list / comments list: {type(e).__name__}: {e}")
+            print(
+                f"* Error while getting post's likes list / comments list: {type(e).__name__}: {e}"
+            )
 
         post_url = f"https://www.instagram.com/{'reel' if last_source == 'reel' else 'p'}/{shortcode}/"
         print(f"* Newest {last_source.lower()} for user {user}:\n")
-        print(f"Date:\t\t\t{get_date_from_ts(highestinsta_dt)} ({calculate_timespan(now_local(), highestinsta_dt)} ago)")
+        print(
+            f"Date:\t\t\t{get_date_from_ts(highestinsta_dt)} ({calculate_timespan(now_local(), highestinsta_dt)} ago)"
+        )
         print(f"{last_source.capitalize()} URL:\t\t{post_url}")
         print(f"Profile URL:\t\thttps://www.instagram.com/{insta_username}/")
         print(f"Likes:\t\t\t{likes}")
@@ -2252,7 +3341,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 video_filename = f'instagram_{user}_{last_source.lower()}_{now_local().strftime("%Y%m%d_%H%M%S")}.mp4'
             if not os.path.isfile(video_filename):
                 if save_pic_video(video_url, video_filename, highestinsta_ts):
-                    print(f"{last_source.capitalize()} video saved to '{video_filename}'")
+                    print(
+                        f"{last_source.capitalize()} video saved to '{video_filename}'"
+                    )
 
         if thumbnail_url:
             if highestinsta_dt:
@@ -2261,11 +3352,15 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 image_filename = f'instagram_{user}_{last_source.lower()}_{now_local().strftime("%Y%m%d_%H%M%S")}.jpeg'
             if not os.path.isfile(image_filename):
                 if save_pic_video(thumbnail_url, image_filename, highestinsta_ts):
-                    print(f"{last_source.capitalize()} thumbnail image saved to '{image_filename}'")
+                    print(
+                        f"{last_source.capitalize()} thumbnail image saved to '{image_filename}'"
+                    )
             if os.path.isfile(image_filename):
                 try:
                     if imgcat_exe:
-                        subprocess.run(f"{imgcat_exe} {image_filename}", shell=True, check=True)
+                        subprocess.run(
+                            f"{imgcat_exe} {image_filename}", shell=True, check=True
+                        )
                 except Exception:
                     pass
 
@@ -2278,7 +3373,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
         highestinsta_ts_old = int(time.time())
         highestinsta_dt_old = now_local()
 
-    r_sleep_time = randomize_number(INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH)
+    r_sleep_time = randomize_number(
+        INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH
+    )
     time.sleep(r_sleep_time)
 
     alive_counter = 0
@@ -2316,9 +3413,19 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             profile_image_url = profile.profile_pic_url_no_iphone
             email_sent = False
         except Exception as e:
-            r_sleep_time = randomize_number(INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH)
-            print(f"* Error, retrying in {display_time(r_sleep_time)}: {type(e).__name__}: {e}")
-            if 'Redirected' in str(e) or 'login' in str(e) or 'Forbidden' in str(e) or 'Wrong' in str(e) or 'Bad Request' in str(e):
+            r_sleep_time = randomize_number(
+                INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH
+            )
+            print(
+                f"* Error, retrying in {display_time(r_sleep_time)}: {type(e).__name__}: {e}"
+            )
+            if (
+                "Redirected" in str(e)
+                or "login" in str(e)
+                or "Forbidden" in str(e)
+                or "Wrong" in str(e)
+                or "Bad Request" in str(e)
+            ):
                 print("* Session might not be valid anymore!")
                 if ERROR_NOTIFICATION and not email_sent:
                     m_subject = f"instagram_monitor: session error! (user: {user})"
@@ -2332,8 +3439,10 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             time.sleep(r_sleep_time)
             continue
 
-        if (next((s for s in last_output if "HTTP redirect from" in s), None)):
-            r_sleep_time = randomize_number(INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH)
+        if next((s for s in last_output if "HTTP redirect from" in s), None):
+            r_sleep_time = randomize_number(
+                INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH
+            )
             print("* Session might not be valid anymore!")
             print(f"Retrying in {display_time(r_sleep_time)}")
             if ERROR_NOTIFICATION and not email_sent:
@@ -2354,10 +3463,18 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 followings_diff_str = "+" + str(followings_diff)
             else:
                 followings_diff_str = str(followings_diff)
-            print(f"* Followings number changed by user {user} from {followings_old_count} to {followings_count} ({followings_diff_str})")
+            print(
+                f"* Followings number changed by user {user} from {followings_old_count} to {followings_count} ({followings_diff_str})"
+            )
             try:
                 if csv_file_name:
-                    write_csv_entry(csv_file_name, now_local_naive(), "Followings Count", followings_old_count, followings_count)
+                    write_csv_entry(
+                        csv_file_name,
+                        now_local_naive(),
+                        "Followings Count",
+                        followings_old_count,
+                        followings_count,
+                    )
             except Exception as e:
                 print(f"* Error: {e}")
 
@@ -2369,7 +3486,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             if not skip_session and not skip_followings and can_view:
                 try:
                     followings = []
-                    followings = [followee.username for followee in profile.get_followees()]
+                    followings = [
+                        followee.username for followee in profile.get_followees()
+                    ]
                     followings_to_save = []
                     followings_count = profile.followees
                     if not followings and followings_count > 0:
@@ -2377,11 +3496,13 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                     else:
                         followings_to_save.append(followings_count)
                         followings_to_save.append(followings)
-                        with open(insta_followings_file, 'w', encoding="utf-8") as f:
+                        with open(insta_followings_file, "w", encoding="utf-8") as f:
                             json.dump(followings_to_save, f, indent=2)
                 except Exception as e:
                     followings = followings_old
-                    print(f"* Error while processing followings: {type(e).__name__}: {e}")
+                    print(
+                        f"* Error while processing followings: {type(e).__name__}: {e}"
+                    )
 
                 if not followings and followings_count > 0:
                     followings = followings_old
@@ -2398,11 +3519,19 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                             print("Removed followings:\n")
                             removed_followings_mbody = "\nRemoved followings:\n\n"
                             for f_in_list in removed_followings:
-                                print(f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]")
+                                print(
+                                    f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]"
+                                )
                                 removed_followings_list += f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
                                 try:
                                     if csv_file_name:
-                                        write_csv_entry(csv_file_name, now_local_naive(), "Removed Followings", f_in_list, "")
+                                        write_csv_entry(
+                                            csv_file_name,
+                                            now_local_naive(),
+                                            "Removed Followings",
+                                            f_in_list,
+                                            "",
+                                        )
                                 except Exception as e:
                                     print(f"* Error: {e}")
                             print()
@@ -2411,11 +3540,19 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                             print("Added followings:\n")
                             added_followings_mbody = "\nAdded followings:\n\n"
                             for f_in_list in added_followings:
-                                print(f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]")
+                                print(
+                                    f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]"
+                                )
                                 added_followings_list += f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
                                 try:
                                     if csv_file_name:
-                                        write_csv_entry(csv_file_name, now_local_naive(), "Added Followings", "", f_in_list)
+                                        write_csv_entry(
+                                            csv_file_name,
+                                            now_local_naive(),
+                                            "Added Followings",
+                                            "",
+                                            f_in_list,
+                                        )
                                 except Exception as e:
                                     print(f"* Error: {e}")
                             print()
@@ -2436,7 +3573,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
             followings_old_count = followings_count
 
-            print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+            print(
+                f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+            )
             print_cur_ts("Timestamp:\t\t")
 
         if followers_count != followers_old_count:
@@ -2446,11 +3585,19 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 followers_diff_str = "+" + str(followers_diff)
             else:
                 followers_diff_str = str(followers_diff)
-            print(f"* Followers number changed for user {user} from {followers_old_count} to {followers_count} ({followers_diff_str})")
+            print(
+                f"* Followers number changed for user {user} from {followers_old_count} to {followers_count} ({followers_diff_str})"
+            )
 
             try:
                 if csv_file_name:
-                    write_csv_entry(csv_file_name, now_local_naive(), "Followers Count", followers_old_count, followers_count)
+                    write_csv_entry(
+                        csv_file_name,
+                        now_local_naive(),
+                        "Followers Count",
+                        followers_old_count,
+                        followers_count,
+                    )
             except Exception as e:
                 print(f"* Error: {e}")
 
@@ -2462,7 +3609,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             if not skip_session and not skip_followers and can_view:
                 try:
                     followers = []
-                    followers = [follower.username for follower in profile.get_followers()]
+                    followers = [
+                        follower.username for follower in profile.get_followers()
+                    ]
                     followers_to_save = []
                     followers_count = profile.followers
                     if not followers and followers_count > 0:
@@ -2470,11 +3619,13 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                     else:
                         followers_to_save.append(followers_count)
                         followers_to_save.append(followers)
-                        with open(insta_followers_file, 'w', encoding="utf-8") as f:
+                        with open(insta_followers_file, "w", encoding="utf-8") as f:
                             json.dump(followers_to_save, f, indent=2)
                 except Exception as e:
                     followers = followers_old
-                    print(f"* Error while processing followers: {type(e).__name__}: {e}")
+                    print(
+                        f"* Error while processing followers: {type(e).__name__}: {e}"
+                    )
 
                 if not followers and followers_count > 0:
                     followers = followers_old
@@ -2490,11 +3641,19 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                             print("Removed followers:\n")
                             removed_followers_mbody = "\nRemoved followers:\n\n"
                             for f_in_list in removed_followers:
-                                print(f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]")
+                                print(
+                                    f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]"
+                                )
                                 removed_followers_list += f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
                                 try:
                                     if csv_file_name:
-                                        write_csv_entry(csv_file_name, now_local_naive(), "Removed Followers", f_in_list, "")
+                                        write_csv_entry(
+                                            csv_file_name,
+                                            now_local_naive(),
+                                            "Removed Followers",
+                                            f_in_list,
+                                            "",
+                                        )
                                 except Exception as e:
                                     print(f"* Error: {e}")
                             print()
@@ -2503,11 +3662,19 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                             print("Added followers:\n")
                             added_followers_mbody = "\nAdded followers:\n\n"
                             for f_in_list in added_followers:
-                                print(f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]")
+                                print(
+                                    f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]"
+                                )
                                 added_followers_list += f"- {f_in_list} [ https://www.instagram.com/{f_in_list}/ ]\n"
                                 try:
                                     if csv_file_name:
-                                        write_csv_entry(csv_file_name, now_local_naive(), "Added Followers", "", f_in_list)
+                                        write_csv_entry(
+                                            csv_file_name,
+                                            now_local_naive(),
+                                            "Added Followers",
+                                            "",
+                                            f_in_list,
+                                        )
                                 except Exception as e:
                                     print(f"* Error: {e}")
                             print()
@@ -2526,7 +3693,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
             followers_old_count = followers_count
 
-            print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+            print(
+                f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+            )
             print_cur_ts("Timestamp:\t\t")
 
         # Profile pic
@@ -2534,7 +3703,18 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
         if DETECT_CHANGED_PROFILE_PIC:
 
             try:
-                detect_changed_profile_picture(user, profile_image_url, profile_pic_file, profile_pic_file_tmp, profile_pic_file_old, PROFILE_PIC_FILE_EMPTY, csv_file_name, r_sleep_time, STATUS_NOTIFICATION, 2)
+                detect_changed_profile_picture(
+                    user,
+                    profile_image_url,
+                    profile_pic_file,
+                    profile_pic_file_tmp,
+                    profile_pic_file_old,
+                    PROFILE_PIC_FILE_EMPTY,
+                    csv_file_name,
+                    r_sleep_time,
+                    STATUS_NOTIFICATION,
+                    2,
+                )
             except Exception as e:
                 print(f"* Error while processing changed profile picture: {e}")
 
@@ -2545,7 +3725,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
             try:
                 if csv_file_name:
-                    write_csv_entry(csv_file_name, now_local_naive(), "Bio Changed", bio_old, bio)
+                    write_csv_entry(
+                        csv_file_name, now_local_naive(), "Bio Changed", bio_old, bio
+                    )
             except Exception as e:
                 print(f"* Error: {e}")
 
@@ -2557,7 +3739,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 send_email(m_subject, m_body, "", SMTP_SSL)
 
             bio_old = bio
-            print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+            print(
+                f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+            )
             print_cur_ts("Timestamp:\t\t")
 
         if is_private != is_private_old:
@@ -2569,11 +3753,19 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 profile_visibility = "public"
                 profile_visibility_old = "private"
 
-            print(f"* Profile visibility changed for user {user} to {profile_visibility} !\n")
+            print(
+                f"* Profile visibility changed for user {user} to {profile_visibility} !\n"
+            )
 
             try:
                 if csv_file_name:
-                    write_csv_entry(csv_file_name, now_local_naive(), "Profile Visibility", profile_visibility_old, profile_visibility)
+                    write_csv_entry(
+                        csv_file_name,
+                        now_local_naive(),
+                        "Profile Visibility",
+                        profile_visibility_old,
+                        profile_visibility,
+                    )
             except Exception as e:
                 print(f"* Error: {e}")
 
@@ -2585,16 +3777,26 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 send_email(m_subject, m_body, "", SMTP_SSL)
 
             is_private_old = is_private
-            print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+            print(
+                f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+            )
             print_cur_ts("Timestamp:\t\t")
 
         if followed_by_viewer != followed_by_viewer_old:
 
-            print(f"* Your account {'started following' if followed_by_viewer else 'stopped following'} the user {user} !")
+            print(
+                f"* Your account {'started following' if followed_by_viewer else 'stopped following'} the user {user} !"
+            )
 
             try:
                 if csv_file_name:
-                    write_csv_entry(csv_file_name, now_local_naive(), "Followed By Viewer", followed_by_viewer_old, followed_by_viewer)
+                    write_csv_entry(
+                        csv_file_name,
+                        now_local_naive(),
+                        "Followed By Viewer",
+                        followed_by_viewer_old,
+                        followed_by_viewer,
+                    )
             except Exception as e:
                 print(f"* Error: {e}")
 
@@ -2606,7 +3808,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 send_email(m_subject, m_body, "", SMTP_SSL)
 
             followed_by_viewer_old = followed_by_viewer
-            print(f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+            print(
+                f"Check interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+            )
             print_cur_ts("Timestamp:\t\t")
 
         if has_story and not story_flag:
@@ -2616,7 +3820,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
             try:
                 if csv_file_name:
-                    write_csv_entry(csv_file_name, now_local_naive(), "New Story", "", "")
+                    write_csv_entry(
+                        csv_file_name, now_local_naive(), "New Story", "", ""
+                    )
             except Exception as e:
                 print(f"* Error: {e}")
 
@@ -2627,18 +3833,27 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                 print(f"Sending email notification to {RECEIVER_EMAIL}")
                 send_email(m_subject, m_body, "", SMTP_SSL)
 
-            print(f"\nCheck interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+            print(
+                f"\nCheck interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+            )
             print_cur_ts("Timestamp:\t\t")
 
         if not has_story and story_flag:
             processed_stories_list = []
             stories_count = 0
             print(f"* Story for user {user} disappeared !")
-            print(f"\nCheck interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+            print(
+                f"\nCheck interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+            )
             print_cur_ts("Timestamp:\t\t")
             story_flag = False
 
-        if has_story and not skip_session and can_view and not skip_getting_story_details:
+        if (
+            has_story
+            and not skip_session
+            and can_view
+            and not skip_getting_story_details
+        ):
             try:
                 stories = bot.get_stories(userids=[insta_userid])
 
@@ -2663,7 +3878,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                         processed_stories_list.append(local_ts)
 
                         expire_utc_dt = story_item.expiring_utc
-                        expire_local_dt = convert_utc_datetime_to_tz_datetime(expire_utc_dt)
+                        expire_local_dt = convert_utc_datetime_to_tz_datetime(
+                            expire_utc_dt
+                        )
                         if expire_local_dt:
                             expire_ts = int(expire_local_dt.timestamp())
                         else:
@@ -2685,14 +3902,18 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                         story_mentions_m_body_html = ""
                         if story_mentions:
                             story_mentions_m_body = f"\nMentions: {story_mentions}"
-                            story_mentions_m_body_html = f"<br>Mentions: {story_mentions}"
+                            story_mentions_m_body_html = (
+                                f"<br>Mentions: {story_mentions}"
+                            )
                             print(f"Mentions:\t\t{story_mentions}")
 
                         story_hashtags_m_body = ""
                         story_hashtags_m_body_html = ""
                         if story_hashtags:
                             story_hashtags_m_body = f"\nHashtags: {story_hashtags}"
-                            story_hashtags_m_body_html = f"<br>Hashtags: {story_hashtags}"
+                            story_hashtags_m_body_html = (
+                                f"<br>Hashtags: {story_hashtags}"
+                            )
                             print(f"Hashtags:\t\t{story_hashtags}")
 
                         story_caption_m_body = ""
@@ -2700,7 +3921,9 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                         story_caption = story_item.caption
                         if story_caption:
                             story_caption_m_body = f"\nDescription:\n\n{story_caption}"
-                            story_caption_m_body_html = f"<br>Description:<br><br>{story_caption}"
+                            story_caption_m_body_html = (
+                                f"<br>Description:<br><br>{story_caption}"
+                            )
                             print(f"Description:\n\n{story_caption}\n")
                         else:
                             print()
@@ -2714,8 +3937,12 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                             else:
                                 story_video_filename = f'instagram_{user}_story_{now_local().strftime("%Y%m%d_%H%M%S")}.mp4'
                             if not os.path.isfile(story_video_filename):
-                                if save_pic_video(story_video_url, story_video_filename, local_ts):
-                                    print(f"Story video saved to '{story_video_filename}'")
+                                if save_pic_video(
+                                    story_video_url, story_video_filename, local_ts
+                                ):
+                                    print(
+                                        f"Story video saved to '{story_video_filename}'"
+                                    )
 
                         m_body_html_pic_saved_text = ""
                         if local_dt:
@@ -2724,12 +3951,22 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                             story_image_filename = f'instagram_{user}_story_{now_local().strftime("%Y%m%d_%H%M%S")}.jpeg'
                         if story_thumbnail_url:
                             if not os.path.isfile(story_image_filename):
-                                if save_pic_video(story_thumbnail_url, story_image_filename, local_ts):
-                                    m_body_html_pic_saved_text = f'<br><br><img src="cid:story_pic" width="50%">'
-                                    print(f"Story thumbnail image saved to '{story_image_filename}'")
+                                if save_pic_video(
+                                    story_thumbnail_url, story_image_filename, local_ts
+                                ):
+                                    m_body_html_pic_saved_text = (
+                                        f'<br><br><img src="cid:story_pic" width="50%">'
+                                    )
+                                    print(
+                                        f"Story thumbnail image saved to '{story_image_filename}'"
+                                    )
                                     try:
                                         if imgcat_exe:
-                                            subprocess.run(f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {story_image_filename}", shell=True, check=True)
+                                            subprocess.run(
+                                                f"{'echo.' if platform.system() == 'Windows' else 'echo'} {'&' if platform.system() == 'Windows' else ';'} {imgcat_exe} {story_image_filename}",
+                                                shell=True,
+                                                check=True,
+                                            )
                                             if i < stories_count:
                                                 print()
                                     except Exception:
@@ -2737,7 +3974,13 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
                         try:
                             if csv_file_name:
-                                write_csv_entry(csv_file_name, convert_to_local_naive(local_dt), "New Story Item", "", story_type)
+                                write_csv_entry(
+                                    csv_file_name,
+                                    convert_to_local_naive(local_dt),
+                                    "New Story Item",
+                                    "",
+                                    story_type,
+                                )
                         except Exception as e:
                             print(f"* Error: {e}")
 
@@ -2749,11 +3992,20 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
                             print(f"Sending email notification to {RECEIVER_EMAIL}")
                             if m_body_html_pic_saved_text:
-                                send_email(m_subject, m_body, m_body_html, SMTP_SSL, story_image_filename, "story_pic")
+                                send_email(
+                                    m_subject,
+                                    m_body,
+                                    m_body_html,
+                                    SMTP_SSL,
+                                    story_image_filename,
+                                    "story_pic",
+                                )
                             else:
                                 send_email(m_subject, m_body, m_body_html, SMTP_SSL)
 
-                        print(f"\nCheck interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+                        print(
+                            f"\nCheck interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+                        )
                         print_cur_ts("Timestamp:\t\t")
 
                     break
@@ -2767,10 +4019,18 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
         new_post = False
 
         cur_h = datetime.now().strftime("%H")
-        hours_to_check = list(range(MIN_H1, MAX_H1 + 1)) + list(range(MIN_H2, MAX_H2 + 1))
+        hours_to_check = list(range(MIN_H1, MAX_H1 + 1)) + list(
+            range(MIN_H2, MAX_H2 + 1)
+        )
 
-        if (CHECK_POSTS_IN_HOURS_RANGE and (int(cur_h) in hours_to_check)) or not CHECK_POSTS_IN_HOURS_RANGE:
-            if (posts_count != posts_count_old or reels_count != reels_count_old) and can_view and not skip_getting_posts_details:
+        if (
+            CHECK_POSTS_IN_HOURS_RANGE and (int(cur_h) in hours_to_check)
+        ) or not CHECK_POSTS_IN_HOURS_RANGE:
+            if (
+                (posts_count != posts_count_old or reels_count != reels_count_old)
+                and can_view
+                and not skip_getting_posts_details
+            ):
                 likes = 0
                 comments = 0
                 caption = ""
@@ -2807,9 +4067,16 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
                     if csv_file_name:
 
-                        csv_dt = convert_to_local_naive(highestinsta_dt) if highestinsta_dt else now_local_naive()
+                        csv_dt = (
+                            convert_to_local_naive(highestinsta_dt)
+                            if highestinsta_dt
+                            else now_local_naive()
+                        )
 
-                        metrics = [("Posts Count", posts_count, posts_count_old), ("Reels Count", reels_count, reels_count_old)]
+                        metrics = [
+                            ("Posts Count", posts_count, posts_count_old),
+                            ("Reels Count", reels_count, reels_count_old),
+                        ]
 
                         for label, new, old in metrics:
                             if new != old:
@@ -2822,11 +4089,17 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                         if last_post:
                             likes = last_post.likes
                             comments = last_post.comments
-                            caption = last_post.caption if last_post.caption is not None else "(empty)"
+                            caption = (
+                                last_post.caption
+                                if last_post.caption is not None
+                                else "(empty)"
+                            )
                             pcaption = last_post.pcaption or ""
                             tagged_users = last_post.tagged_users
                             if last_source == "reel":
-                                shortcode = get_real_reel_code(bot, user) or last_post.shortcode
+                                shortcode = (
+                                    get_real_reel_code(bot, user) or last_post.shortcode
+                                )
                             else:
                                 shortcode = last_post.shortcode
                             thumbnail_url = last_post.url
@@ -2837,12 +4110,26 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                             raise Exception("Failed to get last post/reel details")
 
                 except Exception as e:
-                    r_sleep_time = randomize_number(INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH)
-                    print(f"* Error, retrying in {display_time(r_sleep_time)}: {type(e).__name__}: {e}")
-                    if 'Redirected' in str(e) or 'login' in str(e) or 'Forbidden' in str(e) or 'Wrong' in str(e) or 'Bad Request' in str(e):
+                    r_sleep_time = randomize_number(
+                        INSTA_CHECK_INTERVAL,
+                        RANDOM_SLEEP_DIFF_LOW,
+                        RANDOM_SLEEP_DIFF_HIGH,
+                    )
+                    print(
+                        f"* Error, retrying in {display_time(r_sleep_time)}: {type(e).__name__}: {e}"
+                    )
+                    if (
+                        "Redirected" in str(e)
+                        or "login" in str(e)
+                        or "Forbidden" in str(e)
+                        or "Wrong" in str(e)
+                        or "Bad Request" in str(e)
+                    ):
                         print("* Session might not be valid anymore!")
                         if ERROR_NOTIFICATION and not email_sent:
-                            m_subject = f"instagram_monitor: session error! (user: {user})"
+                            m_subject = (
+                                f"instagram_monitor: session error! (user: {user})"
+                            )
 
                             m_body = f"Session might not be valid anymore: {e}{get_cur_ts(nl_ch + nl_ch + 'Timestamp: ')}"
                             print(f"Sending email notification to {RECEIVER_EMAIL}")
@@ -2855,26 +4142,55 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                     continue
 
                 try:
-                    if new_post and not skip_session and get_more_post_details and last_post:
+                    if (
+                        new_post
+                        and not skip_session
+                        and get_more_post_details
+                        and last_post
+                    ):
                         likes_list = last_post.get_likes()
                         for like in likes_list:
-                            likes_users_list += "- " + like.username + " [ " + "https://www.instagram.com/" + like.username + "/ ]\n"
+                            likes_users_list += (
+                                "- "
+                                + like.username
+                                + " [ "
+                                + "https://www.instagram.com/"
+                                + like.username
+                                + "/ ]\n"
+                            )
                         comments_list = last_post.get_comments()
                         for comment in comments_list:
-                            comment_created_at = convert_utc_datetime_to_tz_datetime(comment.created_at_utc)
+                            comment_created_at = convert_utc_datetime_to_tz_datetime(
+                                comment.created_at_utc
+                            )
                             if comment_created_at:
-                                post_comments_list += "\n[ " + get_short_date_from_ts(comment_created_at) + " - " + "https://www.instagram.com/" + comment.owner.username + "/ ]\n" + comment.text + "\n"
+                                post_comments_list += (
+                                    "\n[ "
+                                    + get_short_date_from_ts(comment_created_at)
+                                    + " - "
+                                    + "https://www.instagram.com/"
+                                    + comment.owner.username
+                                    + "/ ]\n"
+                                    + comment.text
+                                    + "\n"
+                                )
                 except Exception as e:
-                    print(f"* Error while getting post's likes list / comments list: {type(e).__name__}: {e}")
+                    print(
+                        f"* Error while getting post's likes list / comments list: {type(e).__name__}: {e}"
+                    )
 
                 if new_post:
 
                     post_url = f"https://www.instagram.com/{'reel' if last_source == 'reel' else 'p'}/{shortcode}/"
 
-                    print(f"* New {last_source.lower()} for user {user} after {calculate_timespan(highestinsta_dt, highestinsta_dt_old)} ({get_date_from_ts(highestinsta_dt_old)})\n")
+                    print(
+                        f"* New {last_source.lower()} for user {user} after {calculate_timespan(highestinsta_dt, highestinsta_dt_old)} ({get_date_from_ts(highestinsta_dt_old)})\n"
+                    )
                     print(f"Date:\t\t\t{get_date_from_ts(highestinsta_dt)}")
                     print(f"{last_source.capitalize()} URL:\t\t{post_url}")
-                    print(f"Profile URL:\t\thttps://www.instagram.com/{insta_username}/")
+                    print(
+                        f"Profile URL:\t\thttps://www.instagram.com/{insta_username}/"
+                    )
                     print(f"Likes:\t\t\t{likes}")
                     print(f"Comments:\t\t{comments}")
                     print(f"Tagged users:\t\t{tagged_users}")
@@ -2905,8 +4221,12 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                         else:
                             video_filename = f'instagram_{user}_{last_source.lower()}_{now_local().strftime("%Y%m%d_%H%M%S")}.mp4'
                         if not os.path.isfile(video_filename):
-                            if save_pic_video(video_url, video_filename, highestinsta_ts):
-                                print(f"{last_source.capitalize()} video saved to '{video_filename}'")
+                            if save_pic_video(
+                                video_url, video_filename, highestinsta_ts
+                            ):
+                                print(
+                                    f"{last_source.capitalize()} video saved to '{video_filename}'"
+                                )
 
                     m_body_html_pic_saved_text = ""
                     if highestinsta_dt:
@@ -2915,18 +4235,32 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                         image_filename = f'instagram_{user}_{last_source.lower()}_{now_local().strftime("%Y%m%d_%H%M%S")}.jpeg'
                     if thumbnail_url:
                         if not os.path.isfile(image_filename):
-                            if save_pic_video(thumbnail_url, image_filename, highestinsta_ts):
+                            if save_pic_video(
+                                thumbnail_url, image_filename, highestinsta_ts
+                            ):
                                 m_body_html_pic_saved_text = f'<br><br><img src="cid:{last_source.lower()}_pic" width="50%">'
-                                print(f"{last_source.capitalize()} thumbnail image saved to '{image_filename}'")
+                                print(
+                                    f"{last_source.capitalize()} thumbnail image saved to '{image_filename}'"
+                                )
                                 try:
                                     if imgcat_exe:
-                                        subprocess.run(f"{imgcat_exe} {image_filename}", shell=True, check=True)
+                                        subprocess.run(
+                                            f"{imgcat_exe} {image_filename}",
+                                            shell=True,
+                                            check=True,
+                                        )
                                 except Exception:
                                     pass
 
                     try:
                         if csv_file_name:
-                            write_csv_entry(csv_file_name, convert_to_local_naive(highestinsta_dt), f"New {last_source.capitalize()}", "", pcaption)
+                            write_csv_entry(
+                                csv_file_name,
+                                convert_to_local_naive(highestinsta_dt),
+                                f"New {last_source.capitalize()}",
+                                "",
+                                pcaption,
+                            )
                     except Exception as e:
                         print(f"* Error: {e}")
 
@@ -2938,7 +4272,14 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
 
                         print(f"\nSending email notification to {RECEIVER_EMAIL}")
                         if m_body_html_pic_saved_text:
-                            send_email(m_subject, m_body, m_body_html, SMTP_SSL, image_filename, f"{last_source.lower()}_pic")
+                            send_email(
+                                m_subject,
+                                m_body,
+                                m_body_html,
+                                SMTP_SSL,
+                                image_filename,
+                                f"{last_source.lower()}_pic",
+                            )
                         else:
                             send_email(m_subject, m_body, m_body_html, SMTP_SSL)
 
@@ -2948,18 +4289,28 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
                     highestinsta_ts_old = highestinsta_ts
                     highestinsta_dt_old = highestinsta_dt
 
-                    print(f"\nCheck interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})")
+                    print(
+                        f"\nCheck interval:\t\t{display_time(r_sleep_time)} ({get_range_of_dates_from_tss(int(time.time()) - r_sleep_time, int(time.time()), short=True)})"
+                    )
                     print_cur_ts("Timestamp:\t\t")
 
-                elif not new_post and (posts_count != posts_count_old or reels_count != reels_count_old):
+                elif not new_post and (
+                    posts_count != posts_count_old or reels_count != reels_count_old
+                ):
 
-                    if check_posts_counts(user, posts_count, posts_count_old, r_sleep_time):
+                    if check_posts_counts(
+                        user, posts_count, posts_count_old, r_sleep_time
+                    ):
                         posts_count_old = posts_count
 
-                    if check_reels_counts(user, reels_count, reels_count_old, r_sleep_time):
+                    if check_reels_counts(
+                        user, reels_count, reels_count_old, r_sleep_time
+                    ):
                         reels_count_old = reels_count
 
-            elif (posts_count != posts_count_old or reels_count != reels_count_old) and (not can_view or skip_getting_posts_details):
+            elif (
+                posts_count != posts_count_old or reels_count != reels_count_old
+            ) and (not can_view or skip_getting_posts_details):
 
                 if check_posts_counts(user, posts_count, posts_count_old, r_sleep_time):
                     posts_count_old = posts_count
@@ -2973,14 +4324,18 @@ def instagram_monitor_user(user, csv_file_name, skip_session, skip_followers, sk
             print_cur_ts("Liveness check, timestamp:\t")
             alive_counter = 0
 
-        r_sleep_time = randomize_number(INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH)
+        r_sleep_time = randomize_number(
+            INSTA_CHECK_INTERVAL, RANDOM_SLEEP_DIFF_LOW, RANDOM_SLEEP_DIFF_HIGH
+        )
 
         # Be human please
         try:
             if BE_HUMAN:
                 simulate_human_actions(bot, r_sleep_time)
         except Exception as e:
-            print(f"* Warning: It is not easy to be a human, our simulation failed: {e}")
+            print(
+                f"* Warning: It is not easy to be a human, our simulation failed: {e}"
+            )
             print_cur_ts("\nTimestamp:\t\t")
 
         time.sleep(r_sleep_time)
@@ -3008,24 +4363,23 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog="instagram_monitor",
-        description=("Monitor an Instagram user's activity and send customizable email alerts [ https://github.com/misiektoja/instagram_monitor/ ]"), formatter_class=argparse.RawTextHelpFormatter
+        description=(
+            "Monitor an Instagram user's activity and send customizable email alerts [ https://github.com/misiektoja/instagram_monitor/ ]"
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
     )
 
     # Positional
     parser.add_argument(
-        "username",
-        nargs="?",
+        "usernames",
+        nargs="*",
         metavar="TARGET_USERNAME",
-        help="Instagram username to monitor",
-        type=str
+        help="Instagram username(s) to monitor (supports multiple)",
+        type=str,
     )
 
     # Version, just to list in help, it is handled earlier
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=f"%(prog)s v{VERSION}"
-    )
+    parser.add_argument("--version", action="version", version=f"%(prog)s v{VERSION}")
 
     # Configuration & dotenv files
     conf = parser.add_argument_group("Configuration & dotenv files")
@@ -3050,169 +4404,186 @@ def main():
     # Session login credentials
     creds = parser.add_argument_group("Session login credentials")
     creds.add_argument(
-        "-u", "--session-username",
+        "-u",
+        "--session-username",
         dest="session_username",
         metavar="SESSION_USERNAME",
         type=str,
-        help="Instagram username for session login (to fetch followers/followings, stories/posts/reels details)"
+        help="Instagram username for session login (to fetch followers/followings, stories/posts/reels details)",
     )
     creds.add_argument(
-        "-p", "--session-password",
+        "-p",
+        "--session-password",
         dest="session_password",
         metavar="SESSION_PASSWORD",
         type=str,
-        help="Instagram password for session login (recommended to use saved session)"
+        help="Instagram password for session login (recommended to use saved session)",
     )
 
     # Notifications
     notify = parser.add_argument_group("Notifications")
     notify.add_argument(
-        "-s", "--notify-status",
+        "-s",
+        "--notify-status",
         dest="status_notification",
         action="store_true",
         default=None,
-        help="Email on new post/reel/story, bio change, new follow, profile pic or visibility change"
+        help="Email on new post/reel/story, bio change, new follow, profile pic or visibility change",
     )
     notify.add_argument(
-        "-m", "--notify-followers",
+        "-m",
+        "--notify-followers",
         dest="followers_notification",
         action="store_true",
         default=None,
-        help="Email on new followers (disabled by default)"
+        help="Email on new followers (disabled by default)",
     )
     notify.add_argument(
-        "-e", "--no-error-notify",
+        "-e",
+        "--no-error-notify",
         dest="error_notification",
         action="store_false",
         default=None,
-        help="Disable email on errors (e.g. invalid session)"
+        help="Disable email on errors (e.g. invalid session)",
     )
     notify.add_argument(
         "--send-test-email",
         dest="send_test_email",
         action="store_true",
-        help="Send test email to verify SMTP settings"
+        help="Send test email to verify SMTP settings",
     )
 
     # Intervals & timers
     times = parser.add_argument_group("Intervals & timers")
     times.add_argument(
-        "-c", "--check-interval",
+        "-c",
+        "--check-interval",
         dest="check_interval",
         metavar="SECONDS",
         type=int,
-        help="Time between monitoring checks, in seconds"
+        help="Time between monitoring checks, in seconds",
     )
     times.add_argument(
-        "-i", "--random-diff-low",
+        "-i",
+        "--random-diff-low",
         dest="check_interval_random_diff_low",
         metavar="SECONDS",
         type=int,
-        help="Subtract up to this value from check-interval"
+        help="Subtract up to this value from check-interval",
     )
     times.add_argument(
-        "-j", "--random-diff-high",
+        "-j",
+        "--random-diff-high",
         dest="check_interval_random_diff_high",
         metavar="SECONDS",
         type=int,
-        help="Add up to this value to check-interval"
+        help="Add up to this value to check-interval",
     )
 
     # Session‐related options
     session_opts = parser.add_argument_group("Session‐related options")
     session_opts.add_argument(
-        "-l", "--skip-session",
+        "-l",
+        "--skip-session",
         dest="skip_session",
         action="store_true",
         default=None,
-        help="Skip session login (no followers/followings or detailed info)"
+        help="Skip session login (no followers/followings or detailed info)",
     )
     session_opts.add_argument(
-        "-f", "--skip-followers",
+        "-f",
+        "--skip-followers",
         dest="skip_followers",
         action="store_true",
         default=None,
-        help="Do not fetch followers list"
+        help="Do not fetch followers list",
     )
     session_opts.add_argument(
-        "-g", "--skip-followings",
+        "-g",
+        "--skip-followings",
         dest="skip_followings",
         action="store_true",
         default=None,
-        help="Do not fetch followings list"
+        help="Do not fetch followings list",
     )
     session_opts.add_argument(
-        "-r", "--skip-story-details",
+        "-r",
+        "--skip-story-details",
         dest="skip_getting_story_details",
         action="store_true",
         default=None,
-        help="Do not fetch detailed story info"
+        help="Do not fetch detailed story info",
     )
     session_opts.add_argument(
-        "-w", "--skip-post-details",
+        "-w",
+        "--skip-post-details",
         dest="skip_getting_posts_details",
         action="store_true",
         default=None,
-        help="Do not fetch detailed post info"
+        help="Do not fetch detailed post info",
     )
     session_opts.add_argument(
-        "-t", "--more-post-details",
+        "-t",
+        "--more-post-details",
         dest="get_more_post_details",
         action="store_true",
         default=None,
-        help="Fetch extra post details (list of comments and likes)"
+        help="Fetch extra post details (list of comments and likes)",
     )
     session_opts.add_argument(
         "--user-agent",
         dest="user_agent",
         metavar="USER_AGENT",
         type=str,
-        help="Specify a custom web browser user agent for Instagram API requests; leave empty to auto-generate it"
+        help="Specify a custom web browser user agent for Instagram API requests; leave empty to auto-generate it",
     )
     session_opts.add_argument(
         "--user-agent-mobile",
         dest="user_agent_mobile",
         metavar="USER_AGENT_MOBILE",
         type=str,
-        help="Specify a custom mobile user agent for Instagram API requests; leave empty to auto-generate it"
+        help="Specify a custom mobile user agent for Instagram API requests; leave empty to auto-generate it",
     )
     session_opts.add_argument(
         "--be-human",
         dest="be_human",
         action="store_true",
         default=None,
-        help="Make the tool behave more like a human by performing random feed / profile / hashtag / followee actions"
+        help="Make the tool behave more like a human by performing random feed / profile / hashtag / followee actions",
     )
     session_opts.add_argument(
         "--enable-jitter",
         dest="enable_jitter",
         action="store_true",
         default=None,
-        help="Enable human-like HTTP jitter and back-off wrapper"
+        help="Enable human-like HTTP jitter and back-off wrapper",
     )
 
     # Features & output
     opts = parser.add_argument_group("Features & output")
     opts.add_argument(
-        "-k", "--no-profile-pic-detect",
+        "-k",
+        "--no-profile-pic-detect",
         dest="do_not_detect_changed_profile_pic",
         action="store_false",
         default=None,
-        help="Disable detection of changed profile picture"
+        help="Disable detection of changed profile picture",
     )
     opts.add_argument(
-        "-b", "--csv-file",
+        "-b",
+        "--csv-file",
         dest="csv_file",
         metavar="CSV_FILENAME",
         type=str,
-        help="Write all activities and profile changes to CSV file"
+        help="Write all activities and profile changes to CSV file",
     )
     opts.add_argument(
-        "-d", "--disable-logging",
+        "-d",
+        "--disable-logging",
         dest="disable_logging",
         action="store_true",
         default=None,
-        help="Disable logging to instagram_monitor_<username>.log"
+        help="Disable logging to instagram_monitor_<username>.log",
     )
 
     # Firefox session import options
@@ -3220,19 +4591,19 @@ def main():
     import_grp.add_argument(
         "--import-firefox-session",
         action="store_true",
-        help="Import Firefox session cookies into Instaloader"
+        help="Import Firefox session cookies into Instaloader",
     )
     import_grp.add_argument(
         "--cookie-file",
         dest="cookie_file",
         metavar="COOKIEFILE",
-        help="Path to Firefox cookies.sqlite; if omitted, it will list all available"
+        help="Path to Firefox cookies.sqlite; if omitted, it will list all available",
     )
     import_grp.add_argument(
         "--session-file",
         dest="session_file",
         metavar="SESSIONFILE",
-        help="Path to save Instaloader session; if omitted, it will save to the default one"
+        help="Path to save Instaloader session; if omitted, it will save to the default one",
     )
 
     args = parser.parse_args()
@@ -3264,7 +4635,7 @@ def main():
         if DOTENV_FILE:
             DOTENV_FILE = os.path.expanduser(DOTENV_FILE)
 
-    if DOTENV_FILE and DOTENV_FILE.lower() == 'none':
+    if DOTENV_FILE and DOTENV_FILE.lower() == "none":
         env_path = None
     else:
         try:
@@ -3283,7 +4654,9 @@ def main():
         except ImportError:
             env_path = DOTENV_FILE if DOTENV_FILE else None
             if env_path:
-                print(f"* Warning: Cannot load dotenv file '{env_path}' because 'python-dotenv' is not installed\n\nTo install it, run:\n    pip3 install python-dotenv\n\nOnce installed, re-run this tool\n")
+                print(
+                    f"* Warning: Cannot load dotenv file '{env_path}' because 'python-dotenv' is not installed\n\nTo install it, run:\n    pip3 install python-dotenv\n\nOnce installed, re-run this tool\n"
+                )
 
     if env_path:
         for secret in SECRET_KEYS:
@@ -3297,7 +4670,9 @@ def main():
             session_path = os.path.expanduser(args.session_file)
             session_dir = os.path.dirname(session_path) or "."
             if not os.path.isdir(session_dir):
-                raise SystemExit(f"Error: Session directory '{session_dir}' not found !")
+                raise SystemExit(
+                    f"Error: Session directory '{session_dir}' not found !"
+                )
 
         cookie_path = args.cookie_file or get_firefox_cookiefile()
         cookie_path = os.path.expanduser(cookie_path)
@@ -3317,11 +4692,15 @@ def main():
         if local_tz:
             LOCAL_TIMEZONE = str(local_tz)
         else:
-            print("* Error: Cannot detect local timezone, consider setting LOCAL_TIMEZONE to your local timezone manually !")
+            print(
+                "* Error: Cannot detect local timezone, consider setting LOCAL_TIMEZONE to your local timezone manually !"
+            )
             sys.exit(1)
     else:
         if not is_valid_timezone(LOCAL_TIMEZONE):
-            print(f"* Error: Configured LOCAL_TIMEZONE '{LOCAL_TIMEZONE}' is not valid. Please use a valid pytz timezone name.")
+            print(
+                f"* Error: Configured LOCAL_TIMEZONE '{LOCAL_TIMEZONE}' is not valid. Please use a valid pytz timezone name."
+            )
             sys.exit(1)
 
     if args.user_agent:
@@ -3341,14 +4720,23 @@ def main():
 
     if args.send_test_email:
         print("* Sending test email notification ...\n")
-        if send_email("instagram_monitor: test email", "This is test email - your SMTP settings seems to be correct !", "", SMTP_SSL, smtp_timeout=5) == 0:
+        if (
+            send_email(
+                "instagram_monitor: test email",
+                "This is test email - your SMTP settings seems to be correct !",
+                "",
+                SMTP_SSL,
+                smtp_timeout=5,
+            )
+            == 0
+        ):
             print("* Email sent successfully !")
         else:
             sys.exit(1)
         sys.exit(0)
 
-    if not args.username:
-        print("* Error: TARGET_USERNAME argument is required !")
+    if not args.usernames:
+        print("* Error: At least one TARGET_USERNAME argument is required !")
         parser.print_help()
         sys.exit(1)
 
@@ -3416,7 +4804,9 @@ def main():
     if PROFILE_PIC_FILE_EMPTY:
         PROFILE_PIC_FILE_EMPTY = os.path.expanduser(PROFILE_PIC_FILE_EMPTY)
 
-    profile_pic_file_exists = os.path.exists(PROFILE_PIC_FILE_EMPTY) if PROFILE_PIC_FILE_EMPTY else False
+    profile_pic_file_exists = (
+        os.path.exists(PROFILE_PIC_FILE_EMPTY) if PROFILE_PIC_FILE_EMPTY else False
+    )
 
     if IMGCAT_PATH:
         try:
@@ -3432,7 +4822,7 @@ def main():
 
     if CSV_FILE:
         try:
-            with open(CSV_FILE, 'a', newline='', buffering=1, encoding="utf-8") as _:
+            with open(CSV_FILE, "a", newline="", buffering=1, encoding="utf-8") as _:
                 pass
         except Exception as e:
             print(f"* Error, CSV file cannot be opened for writing: {e}")
@@ -3443,12 +4833,19 @@ def main():
 
     if not DISABLE_LOGGING:
         log_path = Path(os.path.expanduser(INSTA_LOGFILE))
-        if log_path.parent != Path('.'):
+        # For multiple users, use combined log name or first user
+        if len(args.usernames) == 1:
+            log_suffix = args.usernames[0]
+        else:
+            log_suffix = "multi_" + "_".join(args.usernames[:3])
+            if len(args.usernames) > 3:
+                log_suffix += f"_and_{len(args.usernames) - 3}_more"
+        if log_path.parent != Path("."):
             if log_path.suffix == "":
-                log_path = log_path.parent / f"{log_path.name}_{args.username}.log"
+                log_path = log_path.parent / f"{log_path.name}_{log_suffix}.log"
         else:
             if log_path.suffix == "":
-                log_path = Path(f"{log_path.name}_{args.username}.log")
+                log_path = Path(f"{log_path.name}_{log_suffix}.log")
         log_path.parent.mkdir(parents=True, exist_ok=True)
         FINAL_LOG_PATH = str(log_path)
         sys.stdout = Logger(FINAL_LOG_PATH)
@@ -3472,8 +4869,12 @@ def main():
         FOLLOWERS_NOTIFICATION = False
         ERROR_NOTIFICATION = False
 
-    print(f"* Instagram polling interval:\t\t[ {display_time(check_interval_low)} - {display_time(INSTA_CHECK_INTERVAL + RANDOM_SLEEP_DIFF_HIGH)} ]")
-    print(f"* Email notifications:\t\t\t[new posts/reels/stories/followings/bio/profile picture/visibility = {STATUS_NOTIFICATION}]\n*\t\t\t\t\t[followers = {FOLLOWERS_NOTIFICATION}] [errors = {ERROR_NOTIFICATION}]")
+    print(
+        f"* Instagram polling interval:\t\t[ {display_time(check_interval_low)} - {display_time(INSTA_CHECK_INTERVAL + RANDOM_SLEEP_DIFF_HIGH)} ]"
+    )
+    print(
+        f"* Email notifications:\t\t\t[new posts/reels/stories/followings/bio/profile picture/visibility = {STATUS_NOTIFICATION}]\n*\t\t\t\t\t[followers = {FOLLOWERS_NOTIFICATION}] [errors = {ERROR_NOTIFICATION}]"
+    )
     print(f"* Mode of the tool:\t\t\t{mode_of_the_tool}")
     print(f"* Human mode:\t\t\t\t{BE_HUMAN}")
     print(f"* Profile pic changes:\t\t\t{DETECT_CHANGED_PROFILE_PIC}")
@@ -3483,32 +4884,85 @@ def main():
     print(f"* Skip stories details:\t\t\t{SKIP_GETTING_STORY_DETAILS}")
     print(f"* Skip posts details:\t\t\t{SKIP_GETTING_POSTS_DETAILS}")
     print(f"* Get more posts details:\t\t{GET_MORE_POST_DETAILS}")
-    print("* Hours for checking posts/reels:\t" + (f"{MIN_H1:02d}:00 - {MAX_H1:02d}:59, {MIN_H2:02d}:00 - {MAX_H2:02d}:59" if CHECK_POSTS_IN_HOURS_RANGE else "00:00 - 23:59"))
+    print(
+        "* Hours for checking posts/reels:\t"
+        + (
+            f"{MIN_H1:02d}:00 - {MAX_H1:02d}:59, {MIN_H2:02d}:00 - {MAX_H2:02d}:59"
+            if CHECK_POSTS_IN_HOURS_RANGE
+            else "00:00 - 23:59"
+        )
+    )
     print(f"* Browser user agent:\t\t\t{USER_AGENT}")
     print(f"* Mobile user agent:\t\t\t{USER_AGENT_MOBILE}")
     print(f"* HTTP jitter/back-off:\t\t\t{ENABLE_JITTER}")
-    print(f"* Liveness check:\t\t\t{bool(LIVENESS_CHECK_INTERVAL)}" + (f" ({display_time(LIVENESS_CHECK_INTERVAL)})" if LIVENESS_CHECK_INTERVAL else ""))
-    print(f"* CSV logging enabled:\t\t\t{bool(CSV_FILE)}" + (f" ({CSV_FILE})" if CSV_FILE else ""))
-    print(f"* Display profile pics:\t\t\t{bool(imgcat_exe)}" + (f" (via {imgcat_exe})" if imgcat_exe else ""))
-    print(f"* Empty profile pic template:\t\t{profile_pic_file_exists}" + (f" ({PROFILE_PIC_FILE_EMPTY})" if profile_pic_file_exists else ""))
-    print(f"* Output logging enabled:\t\t{not DISABLE_LOGGING}" + (f" ({FINAL_LOG_PATH})" if not DISABLE_LOGGING else ""))
+    print(
+        f"* Liveness check:\t\t\t{bool(LIVENESS_CHECK_INTERVAL)}"
+        + (
+            f" ({display_time(LIVENESS_CHECK_INTERVAL)})"
+            if LIVENESS_CHECK_INTERVAL
+            else ""
+        )
+    )
+    print(
+        f"* CSV logging enabled:\t\t\t{bool(CSV_FILE)}"
+        + (f" ({CSV_FILE})" if CSV_FILE else "")
+    )
+    print(
+        f"* Display profile pics:\t\t\t{bool(imgcat_exe)}"
+        + (f" (via {imgcat_exe})" if imgcat_exe else "")
+    )
+    print(
+        f"* Empty profile pic template:\t\t{profile_pic_file_exists}"
+        + (f" ({PROFILE_PIC_FILE_EMPTY})" if profile_pic_file_exists else "")
+    )
+    print(
+        f"* Output logging enabled:\t\t{not DISABLE_LOGGING}"
+        + (f" ({FINAL_LOG_PATH})" if not DISABLE_LOGGING else "")
+    )
     print(f"* Configuration file:\t\t\t{cfg_path}")
     print(f"* Dotenv file:\t\t\t\t{env_path or 'None'}")
     print(f"* Local timezone:\t\t\t{LOCAL_TIMEZONE}")
 
-    out = f"\nMonitoring Instagram user {args.username}"
+    if len(args.usernames) == 1:
+        out = f"\nMonitoring Instagram user {args.usernames[0]}"
+    else:
+        out = f"\nMonitoring {len(args.usernames)} Instagram users: {', '.join(args.usernames)}"
     print(out)
     print("-" * len(out))
 
     # We define signal handlers only for Linux, Unix & MacOS since Windows has limited number of signals supported
-    if platform.system() != 'Windows':
-        signal.signal(signal.SIGUSR1, toggle_status_changes_notifications_signal_handler)
+    if platform.system() != "Windows":
+        signal.signal(
+            signal.SIGUSR1, toggle_status_changes_notifications_signal_handler
+        )
         signal.signal(signal.SIGUSR2, toggle_followers_notifications_signal_handler)
         signal.signal(signal.SIGTRAP, increase_check_signal_handler)
         signal.signal(signal.SIGABRT, decrease_check_signal_handler)
         signal.signal(signal.SIGHUP, reload_secrets_signal_handler)
 
-    instagram_monitor_user(args.username, CSV_FILE, SKIP_SESSION, SKIP_FOLLOWERS, SKIP_FOLLOWINGS, SKIP_GETTING_STORY_DETAILS, SKIP_GETTING_POSTS_DETAILS, GET_MORE_POST_DETAILS)
+    # Use multi-user mode for multiple usernames, legacy single-user mode for one
+    if len(args.usernames) == 1:
+        instagram_monitor_user(
+            args.usernames[0],
+            CSV_FILE,
+            SKIP_SESSION,
+            SKIP_FOLLOWERS,
+            SKIP_FOLLOWINGS,
+            SKIP_GETTING_STORY_DETAILS,
+            SKIP_GETTING_POSTS_DETAILS,
+            GET_MORE_POST_DETAILS,
+        )
+    else:
+        monitor_multiple_users(
+            args.usernames,
+            CSV_FILE,
+            SKIP_SESSION,
+            SKIP_FOLLOWERS,
+            SKIP_FOLLOWINGS,
+            SKIP_GETTING_STORY_DETAILS,
+            SKIP_GETTING_POSTS_DETAILS,
+            GET_MORE_POST_DETAILS,
+        )
 
     sys.stdout = stdout_bck
     sys.exit(0)
