@@ -2344,7 +2344,11 @@ def monitor_multiple_users(
                     send_email(m_subject, m_body, "", SMTP_SSL)
                     state["email_sent"] = True
 
-            time.sleep(NEXT_OPERATION_DELAY)
+            # Add longer delay between users to avoid rate limiting (especially in anonymous mode)
+            if len(user_states) > 1:
+                time.sleep(random.randint(10, 20))
+            else:
+                time.sleep(NEXT_OPERATION_DELAY)
 
         alive_counter += 1
 
