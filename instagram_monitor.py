@@ -2099,6 +2099,31 @@ def init_user_state(
                     f"* Cannot load followings list from '{state['insta_followings_file']}' file: {e}"
                 )
 
+        # Fetch initial followings if no file exists and session is active
+        if (
+            not os.path.isfile(state["insta_followings_file"])
+            and not skip_session
+            and not skip_followings
+            and state.get("can_view", True)
+            and state["followings_count"] > 0
+        ):
+            try:
+                print(f"* Fetching initial followings list for {user}...")
+                followings = [
+                    followee.username for followee in profile.get_followees()
+                ]
+                if followings:
+                    state["followings"] = followings
+                    state["followings_old"] = followings
+                    followings_to_save = [state["followings_count"], followings]
+                    with open(state["insta_followings_file"], "w", encoding="utf-8") as f:
+                        json.dump(followings_to_save, f, indent=2)
+                    print(f"* Followings ({len(followings)}) saved to '{state['insta_followings_file']}'")
+                elif state["followings_count"] > 0:
+                    print("* Empty followings list returned, not saved to file")
+            except Exception as e:
+                print(f"* Error fetching initial followings: {type(e).__name__}: {e}")
+
         # Initialize post tracking
         state["highestinsta_ts_old"] = int(time.time())
         state["highestinsta_dt_old"] = now_local()
