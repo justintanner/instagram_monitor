@@ -1,6 +1,7 @@
-"""Profile card image generation for instagram_monitor."""
+"""Profile card image generation for Instagram monitor."""
 
 import os
+from pathlib import Path
 
 try:
     from PIL import Image, ImageDraw, ImageFont
@@ -21,8 +22,10 @@ TEXT_AREA_LEFT_MARGIN = (
     PROFILE_PIC_MARGIN_LEFT + PROFILE_PIC_SIZE + 90
 )  # +10px more space from photo
 VERIFIED_BADGE_SIZE = 28
-VERIFIED_BADGE_PNG = "assets/check-big.png"
-WATERMARK_PNG = "assets/instagram-red.png"
+# Asset paths - relative to project root
+_PROJECT_ROOT = Path(__file__).parent.parent
+VERIFIED_BADGE_PNG = _PROJECT_ROOT / "assets" / "check-big.png"
+WATERMARK_PNG = _PROJECT_ROOT / "assets" / "instagram-red.png"
 WATERMARK_SIZE = 180
 WATERMARK_ROTATION = 10
 WATERMARK_MARGIN_RIGHT = 20
@@ -261,8 +264,8 @@ def draw_circular_profile_pic(
 
 def load_verified_badge(size):
     """Load verified badge PNG and resize to target size."""
-    badge_path = os.path.join(os.path.dirname(__file__), "..", VERIFIED_BADGE_PNG)
-    if os.path.exists(badge_path):
+    badge_path = VERIFIED_BADGE_PNG
+    if badge_path.exists():
         try:
             badge = Image.open(badge_path).convert("RGBA")
             return badge.resize((size, size), Image.Resampling.LANCZOS)
@@ -537,7 +540,7 @@ def generate_profile_card(
         )
 
     # Draw watermark in bottom-right corner
-    watermark_path = os.path.join(os.path.dirname(__file__), "..", WATERMARK_PNG)
+    watermark_path = WATERMARK_PNG
     draw_watermark(
         img,
         watermark_path,

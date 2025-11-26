@@ -20,23 +20,22 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY instagram_monitor.py .
-COPY instagram_profile_pic_empty.jpeg* ./
+COPY start.py .
+COPY src/ ./src/
+COPY assets/ ./assets/
+COPY .env.example .
 
 # Create data directory for persistent storage
-RUN mkdir -p /data && chown -R monitor:monitor /data /app
+RUN mkdir -p /app/data/logs /app/data/images && chown -R monitor:monitor /app
 
 # Switch to non-root user
 USER monitor
 
 # Data volume for logs, session files, and downloaded media
-VOLUME ["/data"]
-
-# Set working directory to data volume so output files are persisted
-WORKDIR /data
+VOLUME ["/app/data"]
 
 # Default entrypoint
-ENTRYPOINT ["python", "/app/instagram_monitor.py"]
+ENTRYPOINT ["python", "start.py"]
 
 # Default command (show help)
 CMD ["--help"]

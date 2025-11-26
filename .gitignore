@@ -162,3 +162,13 @@ cython_debug/
 
 # Config files
 *.conf
+
+# Data directory (output files)
+data/
+
+# Legacy directories (not used in refactored code)
+grc/
+downloads/
+
+# Keep .env.example but ignore local env files
+!.env.example
