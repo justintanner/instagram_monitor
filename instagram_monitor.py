@@ -72,6 +72,23 @@ FOLLOWERS_NOTIFICATION = False
 # Can also be disabled via the -e flag
 ERROR_NOTIFICATION = True
 
+# X/Twitter API settings for posting follow/unfollow events
+# Requires OAuth 2.0 User Context credentials
+# Provide secrets using one of the following methods:
+#   - Set as environment variables (e.g. export X_API_KEY=...)
+#   - Add to ".env" file (X_API_KEY=...) for persistent use
+# Fallback:
+#   - Hard-code in the code or config file
+X_API_KEY = ""
+X_API_SECRET = ""
+X_ACCESS_TOKEN = ""
+X_ACCESS_TOKEN_SECRET = ""
+
+# Whether to post to X on follow/unfollow events
+# Only applies if STATUS_NOTIFICATION / -s is enabled
+# Can also be enabled via the -x flag
+X_NOTIFICATION = False
+
 # How often to check for user activity; in seconds
 # Can also be set using the -c flag
 INSTA_CHECK_INTERVAL = 5400  # 1,5 hours
@@ -250,6 +267,11 @@ RECEIVER_EMAIL = ""
 STATUS_NOTIFICATION = False
 FOLLOWERS_NOTIFICATION = False
 ERROR_NOTIFICATION = False
+X_API_KEY = ""
+X_API_SECRET = ""
+X_ACCESS_TOKEN = ""
+X_ACCESS_TOKEN_SECRET = ""
+X_NOTIFICATION = False
 INSTA_CHECK_INTERVAL = 0
 RANDOM_SLEEP_DIFF_LOW = 0
 RANDOM_SLEEP_DIFF_HIGH = 0
@@ -297,7 +319,14 @@ exec(CONFIG_BLOCK, globals())
 DEFAULT_CONFIG_FILENAME = "instagram_monitor.conf"
 
 # List of secret keys to load from env/config
-SECRET_KEYS = ("SESSION_PASSWORD", "SMTP_PASSWORD")
+SECRET_KEYS = (
+    "SESSION_PASSWORD",
+    "SMTP_PASSWORD",
+    "X_API_KEY",
+    "X_API_SECRET",
+    "X_ACCESS_TOKEN",
+    "X_ACCESS_TOKEN_SECRET",
+)
 
 # Default value for network-related timeouts in functions
 FUNCTION_TIMEOUT = 15
@@ -379,6 +408,29 @@ from sqlite3 import OperationalError, connect
 from pathlib import Path
 from functools import wraps
 import traceback
+
+# Optional X/Twitter posting support
+try:
+    import tweepy
+    TWEEPY_AVAILABLE = True
+except ImportError:
+    TWEEPY_AVAILABLE = False
+
+# Optional image generation for profile cards
+try:
+    from PIL import Image, ImageDraw, ImageFont
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+
+# Try to use modular imports from src/ if available
+try:
+    from src.x_poster import post_to_x as _src_post_to_x
+    from src.x_poster import format_follow_tweet as _src_format_follow_tweet
+    from src.profile_card import generate_profile_card as _src_generate_profile_card
+    _USE_SRC_MODULES = True
+except ImportError:
+    _USE_SRC_MODULES = False
 
 
 # Logger class to output messages to stdout and log file
@@ -652,6 +704,307 @@ def send_email(
         print(f"Error sending email: {e}")
         return 1
     return 0
+
+
+def generate_profile_card(
+    username,
+    display_name,
+    followers,
+    following,
+    profile_pic_path,
+    output_path,
+):
+    """Generate an Instagram-style profile card image."""
+    # Use src module if available
+    if _USE_SRC_MODULES:
+        return _src_generate_profile_card(
+            username, display_name, followers, following, profile_pic_path, output_path
+        )
+
+    if not PIL_AVAILABLE:
+        print("* Warning: PIL/Pillow not available, cannot generate profile card")
+        return None
+
+    # Layout configuration
+    width, height = 800, 300
+    pic_size = 200
+    ring_thickness = 8
+    gap_thickness = 4
+
+    # Colors
+    white = (255, 255, 255)
+    black = (0, 0, 0)
+    grey = (142, 142, 142)
+    verified_blue = (56, 151, 240)
+    gradient_colors = [
+        (253, 184, 51), (252, 128, 55), (221, 42, 123),
+        (131, 58, 180), (74, 114, 219), (253, 184, 51),
+    ]
+
+    img = Image.new("RGB", (width, height), white)
+    draw = ImageDraw.Draw(img)
+
+    # Helper: interpolate gradient color
+    def interpolate_color(t, colors):
+        num = len(colors)
+        if num <= 1:
+            return colors[0] if colors else (0, 0, 0)
+        seg_len = 1.0 / (num - 1)
+        idx = min(int(t / seg_len), num - 2)
+        local_t = (t - idx * seg_len) / seg_len
+        c1, c2 = colors[idx], colors[idx + 1]
+        return (
+            int(c1[0] * (1 - local_t) + c2[0] * local_t),
+            int(c1[1] * (1 - local_t) + c2[1] * local_t),
+            int(c1[2] * (1 - local_t) + c2[2] * local_t),
+        )
+
+    # Helper: format count Instagram-style
+    def fmt_count(n):
+        if not isinstance(n, int):
+            return str(n)
+        if n >= 1_000_000:
+            return f"{n / 1_000_000:.1f}M".replace(".0M", "M")
+        if n >= 10_000:
+            return f"{n // 1000}K"
+        if n >= 1_000:
+            return f"{n / 1_000:.1f}K".replace(".0K", "K")
+        return str(n)
+
+    # Profile picture center
+    pic_center_x = 50 + pic_size // 2 + ring_thickness + gap_thickness
+    pic_center_y = height // 2
+    outer_radius = pic_size // 2
+
+    # Draw gradient ring
+    ring_outer = outer_radius + ring_thickness + gap_thickness
+    ring_bbox = (
+        pic_center_x - ring_outer, pic_center_y - ring_outer,
+        pic_center_x + ring_outer, pic_center_y + ring_outer,
+    )
+    for i in range(360):
+        color = interpolate_color(i / 360, gradient_colors)
+        draw.arc(ring_bbox, i, i + 1, fill=color, width=ring_thickness)
+
+    # Draw white gap
+    gap_r = outer_radius + gap_thickness
+    draw.ellipse(
+        (pic_center_x - gap_r, pic_center_y - gap_r,
+         pic_center_x + gap_r, pic_center_y + gap_r),
+        fill=white,
+    )
+
+    # Load and draw profile picture
+    if profile_pic_path and os.path.exists(profile_pic_path):
+        try:
+            pic = Image.open(profile_pic_path).convert("RGBA")
+        except Exception:
+            pic = Image.new("RGBA", (pic_size, pic_size), (150, 150, 150, 255))
+    else:
+        pic = Image.new("RGBA", (pic_size, pic_size), (150, 150, 150, 255))
+
+    pic = pic.resize((pic_size, pic_size), Image.Resampling.LANCZOS)
+    mask = Image.new("L", (pic_size, pic_size), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, pic_size, pic_size), fill=255)
+    circular = Image.new("RGBA", (pic_size, pic_size), (0, 0, 0, 0))
+    circular.paste(pic, (0, 0), mask)
+    img.paste(circular, (pic_center_x - outer_radius, pic_center_y - outer_radius), circular)
+
+    # Load fonts
+    font_paths_bold = [
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+        "/usr/share/fonts/truetype/msttcorefonts/Arial_Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+    ]
+    font_paths_regular = [
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/usr/share/fonts/truetype/msttcorefonts/arial.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    ]
+
+    def load_font(paths, size):
+        for p in paths:
+            if os.path.exists(p):
+                try:
+                    return ImageFont.truetype(p, size)
+                except (OSError, IOError):
+                    continue
+        return ImageFont.load_default()
+
+    font_username = load_font(font_paths_bold, 32)
+    font_stats_num = load_font(font_paths_bold, 18)
+    font_stats_label = load_font(font_paths_regular, 18)
+    font_name = load_font(font_paths_bold, 22)
+
+    # Text layout
+    text_x = 50 + pic_size + 80
+
+    # Calculate heights for vertical centering
+    username_bbox = draw.textbbox((0, 0), username, font=font_username)
+    username_h = username_bbox[3] - username_bbox[1]
+    username_w = username_bbox[2] - username_bbox[0]
+
+    stats_text = f"{fmt_count(followers)} followers   {fmt_count(following)} following"
+    stats_bbox = draw.textbbox((0, 0), stats_text, font=font_stats_label)
+    stats_h = stats_bbox[3] - stats_bbox[1]
+
+    name_h = 0
+    if display_name:
+        name_bbox = draw.textbbox((0, 0), display_name, font=font_name)
+        name_h = name_bbox[3] - name_bbox[1]
+
+    gap1, gap2 = 8, 12
+    total_h = username_h + gap1 + stats_h
+    if display_name:
+        total_h += gap2 + name_h
+
+    current_y = (height - total_h) // 2
+
+    # Draw username
+    draw.text((text_x, current_y), username, fill=black, font=font_username)
+
+    # Draw verified badge
+    badge_size = 24
+    badge_x = text_x + username_w + 10
+    badge_y = current_y + (username_h - badge_size) // 2
+    draw.ellipse((badge_x, badge_y, badge_x + badge_size, badge_y + badge_size), fill=verified_blue)
+    # Checkmark
+    lw = max(2, int(badge_size * 0.12))
+    pts = [
+        (badge_x + badge_size * 0.2, badge_y + badge_size * 0.5),
+        (badge_x + badge_size * 0.45, badge_y + badge_size * 0.7),
+        (badge_x + badge_size * 0.8, badge_y + badge_size * 0.3),
+    ]
+    draw.line([pts[0], pts[1]], fill=white, width=lw)
+    draw.line([pts[1], pts[2]], fill=white, width=lw)
+
+    # Draw stats
+    current_y += username_h + gap1
+    f_fmt = fmt_count(followers)
+    g_fmt = fmt_count(following)
+
+    draw.text((text_x, current_y), f_fmt, fill=black, font=font_stats_num)
+    f_w = draw.textbbox((0, 0), f_fmt, font=font_stats_num)[2]
+    draw.text((text_x + f_w + 5, current_y), "followers", fill=grey, font=font_stats_label)
+    fl_w = draw.textbbox((0, 0), "followers", font=font_stats_label)[2]
+
+    gx = text_x + f_w + 5 + fl_w + 20
+    draw.text((gx, current_y), g_fmt, fill=black, font=font_stats_num)
+    g_w = draw.textbbox((0, 0), g_fmt, font=font_stats_num)[2]
+    draw.text((gx + g_w + 5, current_y), "following", fill=grey, font=font_stats_label)
+
+    # Draw display name
+    if display_name:
+        current_y += stats_h + gap2
+        draw.text((text_x, current_y), display_name, fill=black, font=font_name)
+
+    img.save(output_path, "JPEG", quality=95)
+    return output_path
+
+
+def post_to_x(text, image_path=""):
+    """Post a tweet to X/Twitter with optional image."""
+    # Use src module if available
+    if _USE_SRC_MODULES:
+        return _src_post_to_x(text, image_path, credentials={
+            "api_key": X_API_KEY,
+            "api_secret": X_API_SECRET,
+            "access_token": X_ACCESS_TOKEN,
+            "access_token_secret": X_ACCESS_TOKEN_SECRET,
+        })
+
+    if not TWEEPY_AVAILABLE:
+        print("* Error: tweepy not available, cannot post to X")
+        return 1
+
+    if not X_API_KEY or X_API_KEY == "your_api_key":
+        print("* Error: X API credentials not configured")
+        return 1
+
+    if not X_API_SECRET or not X_ACCESS_TOKEN or not X_ACCESS_TOKEN_SECRET:
+        print("* Error: X API credentials incomplete")
+        return 1
+
+    try:
+        # For media upload, we need v1.1 API
+        auth = tweepy.OAuth1UserHandler(
+            X_API_KEY,
+            X_API_SECRET,
+            X_ACCESS_TOKEN,
+            X_ACCESS_TOKEN_SECRET,
+        )
+        api = tweepy.API(auth)
+
+        # v2 client for posting tweets
+        client = tweepy.Client(
+            consumer_key=X_API_KEY,
+            consumer_secret=X_API_SECRET,
+            access_token=X_ACCESS_TOKEN,
+            access_token_secret=X_ACCESS_TOKEN_SECRET,
+        )
+
+        media_ids = None
+        if image_path and os.path.exists(image_path):
+            media = api.media_upload(image_path)
+            media_ids = [media.media_id]
+
+        response = client.create_tweet(text=text, media_ids=media_ids)
+
+        if response and response.data:
+            tweet_id = response.data["id"]
+            print(f"* Posted to X: https://x.com/i/status/{tweet_id}")
+            return 0
+        else:
+            print("* Error: Failed to post to X (no response data)")
+            return 1
+
+    except tweepy.TweepyException as e:
+        print(f"* Error posting to X: {e}")
+        return 1
+    except Exception as e:
+        print(f"* Error posting to X: {e}")
+        return 1
+
+
+def format_follow_tweet(user, display_name, added_list, removed_list):
+    """Format a tweet for follow/unfollow events."""
+    # Use src module if available
+    if _USE_SRC_MODULES:
+        return _src_format_follow_tweet(user, display_name, added_list, removed_list)
+
+    lines = []
+
+    display_part = f" ({display_name})" if display_name else ""
+
+    if added_list:
+        count = len(added_list)
+        person_word = "person" if count == 1 else "people"
+        lines.append(f"🔥 {user}{display_part} started following {count} {person_word}:\n")
+        for username in added_list[:5]:  # Limit to 5 to stay under 280 chars
+            lines.append(f"✅ {username}")
+            lines.append(f"🔗 https://instagram.com/{username}")
+        if len(added_list) > 5:
+            lines.append(f"... and {len(added_list) - 5} more")
+
+    if removed_list:
+        if added_list:
+            lines.append("")  # Separator
+        count = len(removed_list)
+        person_word = "person" if count == 1 else "people"
+        lines.append(f"💔 {user}{display_part} unfollowed {count} {person_word}:\n")
+        for username in removed_list[:5]:
+            lines.append(f"❌ {username}")
+            lines.append(f"🔗 https://instagram.com/{username}")
+        if len(removed_list) > 5:
+            lines.append(f"... and {len(removed_list) - 5} more")
+
+    tweet = "\n".join(lines)
+
+    # Truncate if too long (280 char limit)
+    if len(tweet) > 280:
+        tweet = tweet[:277] + "..."
+
+    return tweet
 
 
 # Initializes the CSV file
@@ -2004,6 +2357,7 @@ def init_user_state(
 
         state["insta_username"] = profile.username
         state["insta_userid"] = profile.userid
+        state["full_name"] = profile.full_name
         state["followers_count"] = profile.followers
         state["followings_count"] = profile.followees
         state["bio"] = profile.biography
@@ -2721,6 +3075,7 @@ def instagram_monitor_user(
         time.sleep(NEXT_OPERATION_DELAY)
         insta_username = profile.username
         insta_userid = profile.userid
+        full_name = profile.full_name
         followers_count = profile.followers
         followings_count = profile.followees
         bio = profile.biography
@@ -3073,6 +3428,29 @@ def instagram_monitor_user(
                 except Exception as e:
                     print(f"* Error: {e}")
             print()
+
+        # Post to X if enabled
+        if X_NOTIFICATION and STATUS_NOTIFICATION:
+            try:
+                # Generate profile card image
+                card_path = f"/tmp/instagram_{user}_card.jpeg"
+                generate_profile_card(
+                    user,
+                    full_name,
+                    followers_count,
+                    followings_count,
+                    profile_pic_file,
+                    card_path,
+                )
+
+                # Format and post tweet
+                tweet_text = format_follow_tweet(
+                    user, full_name, added_followings, removed_followings
+                )
+                print(f"Posting to X: {tweet_text[:50]}...")
+                post_to_x(tweet_text, card_path)
+            except Exception as e:
+                print(f"* Error posting to X: {e}")
 
     if not skip_session and not skip_followers and can_view:
         followers_old = followers
@@ -4481,6 +4859,20 @@ def main():
         action="store_true",
         help="Send test email to verify SMTP settings",
     )
+    notify.add_argument(
+        "-x",
+        "--x-notification",
+        dest="x_notification",
+        action="store_true",
+        default=None,
+        help="Post to X/Twitter on follow/unfollow events (requires STATUS_NOTIFICATION)",
+    )
+    notify.add_argument(
+        "--send-test-x",
+        dest="send_test_x",
+        action="store_true",
+        help="Send test post to X to verify API credentials",
+    )
 
     # Intervals & timers
     times = parser.add_argument_group("Intervals & timers")
@@ -4764,6 +5156,15 @@ def main():
             sys.exit(1)
         sys.exit(0)
 
+    if args.send_test_x:
+        print("* Sending test post to X ...\n")
+        test_text = "instagram_monitor: test post - X API credentials are working!"
+        if post_to_x(test_text) == 0:
+            print("* X post sent successfully !")
+        else:
+            sys.exit(1)
+        sys.exit(0)
+
     if not args.usernames:
         print("* Error: At least one TARGET_USERNAME argument is required !")
         parser.print_help()
@@ -4890,6 +5291,9 @@ def main():
     if args.error_notification is False:
         ERROR_NOTIFICATION = False
 
+    if args.x_notification is True:
+        X_NOTIFICATION = True
+
     if STATUS_NOTIFICATION is False:
         FOLLOWERS_NOTIFICATION = False
 
@@ -4904,6 +5308,7 @@ def main():
     print(
         f"* Email notifications:\t\t\t[new posts/reels/stories/followings/bio/profile picture/visibility = {STATUS_NOTIFICATION}]\n*\t\t\t\t\t[followers = {FOLLOWERS_NOTIFICATION}] [errors = {ERROR_NOTIFICATION}]"
     )
+    print(f"* X/Twitter notifications:\t\t{X_NOTIFICATION}")
     print(f"* Mode of the tool:\t\t\t{mode_of_the_tool}")
     print(f"* Human mode:\t\t\t\t{BE_HUMAN}")
     print(f"* Profile pic changes:\t\t\t{DETECT_CHANGED_PROFILE_PIC}")

@@ -4,3 +4,5 @@ python-dateutil
 pytz
 tzlocal
 python-dotenv
+tweepy
+Pillow
