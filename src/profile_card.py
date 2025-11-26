@@ -11,19 +11,21 @@ except ImportError:
 
 
 # --- Layout Configuration ---
-WIDTH, HEIGHT = 900, 340
+WIDTH, HEIGHT = 900, 450
 PROFILE_PIC_SIZE = 200
 PROFILE_PIC_MARGIN_LEFT = 50
 PROFILE_PIC_Y_CENTER = HEIGHT // 2
 RING_THICKNESS = 8
 RING_GAP_THICKNESS = 4
-TEXT_AREA_LEFT_MARGIN = PROFILE_PIC_MARGIN_LEFT + PROFILE_PIC_SIZE + 90  # +10px more space from photo
-VERIFIED_BADGE_SIZE = 22
+TEXT_AREA_LEFT_MARGIN = (
+    PROFILE_PIC_MARGIN_LEFT + PROFILE_PIC_SIZE + 90
+)  # +10px more space from photo
+VERIFIED_BADGE_SIZE = 28
 VERIFIED_BADGE_PNG = "assets/check-big.png"
 WATERMARK_PNG = "assets/instagram-red.png"
-WATERMARK_SIZE = 250
-WATERMARK_ROTATION = -10
-WATERMARK_MARGIN_RIGHT = -125  # Negative to cut off half
+WATERMARK_SIZE = 180
+WATERMARK_ROTATION = 10
+WATERMARK_MARGIN_RIGHT = 20
 WATERMARK_MARGIN_BOTTOM = -125
 WATERMARK_OPACITY = 1.0
 
@@ -33,12 +35,9 @@ BLACK = (0, 0, 0)
 GREY = (142, 142, 142)
 VERIFIED_BLUE = (56, 151, 240)
 INSTAGRAM_GRADIENT_COLORS = [
-    (253, 184, 51),   # Yellow
-    (252, 128, 55),   # Orange
-    (221, 42, 123),   # Pink
-    (131, 58, 180),   # Purple
-    (74, 114, 219),   # Blue
-    (253, 184, 51),   # Back to yellow (cycle)
+    (253, 203, 94),  # Orange #FDCB5E
+    (214, 36, 159),  # Magenta #D6249F
+    (253, 203, 94),  # Back to Orange (cycle)
 ]
 
 # --- Font Paths ---
@@ -98,7 +97,9 @@ def get_font(font_paths, size, index=0):
         return ImageFont.load_default()
 
 
-def draw_text_antialiased(base_image, position, text, font_paths, font_size, fill, scale=2, font_index=0):
+def draw_text_antialiased(
+    base_image, position, text, font_paths, font_size, fill, scale=2, font_index=0
+):
     """Draw anti-aliased text using supersampling."""
     # Load font at higher resolution
     hi_font = get_font(font_paths, font_size * scale, index=font_index)
@@ -115,7 +116,12 @@ def draw_text_antialiased(base_image, position, text, font_paths, font_size, fil
     hi_res_draw = ImageDraw.Draw(hi_res_img)
 
     # Draw text at high resolution
-    hi_res_draw.text((2, 2 - bbox[1]), text, font=hi_font, fill=fill + (255,) if len(fill) == 3 else fill)
+    hi_res_draw.text(
+        (2, 2 - bbox[1]),
+        text,
+        font=hi_font,
+        fill=fill + (255,) if len(fill) == 3 else fill,
+    )
 
     # Downsample for anti-aliasing
     final_width = text_width // scale
@@ -195,7 +201,13 @@ def draw_circular_profile_pic(
         end_angle = (i + 1) * 360 / segments
         t = i / segments
         current_color = interpolate_color(t, gradient_colors)
-        hi_res_draw.arc(ring_bbox, start_angle, end_angle, fill=current_color, width=hi_ring_thickness)
+        hi_res_draw.arc(
+            ring_bbox,
+            start_angle,
+            end_angle,
+            fill=current_color,
+            width=hi_ring_thickness,
+        )
 
     # 2. Draw white gap circle at high resolution
     gap_bbox = (
@@ -212,11 +224,17 @@ def draw_circular_profile_pic(
         try:
             profile_img = Image.open(img_path).convert("RGBA")
         except Exception:
-            profile_img = Image.new("RGBA", (hi_pic_size, hi_pic_size), (150, 150, 150, 255))
+            profile_img = Image.new(
+                "RGBA", (hi_pic_size, hi_pic_size), (150, 150, 150, 255)
+            )
     else:
-        profile_img = Image.new("RGBA", (hi_pic_size, hi_pic_size), (150, 150, 150, 255))
+        profile_img = Image.new(
+            "RGBA", (hi_pic_size, hi_pic_size), (150, 150, 150, 255)
+        )
 
-    profile_img_resized = profile_img.resize((hi_pic_size, hi_pic_size), Image.Resampling.LANCZOS)
+    profile_img_resized = profile_img.resize(
+        (hi_pic_size, hi_pic_size), Image.Resampling.LANCZOS
+    )
 
     # Create circular mask at high resolution for smooth edges
     mask = Image.new("L", (hi_pic_size, hi_pic_size), 0)
@@ -269,7 +287,15 @@ def draw_verified_badge(draw, x, y, size):
     draw.line([checkmark_coords[1], checkmark_coords[2]], fill=WHITE, width=line_width)
 
 
-def draw_watermark(base_image, watermark_path, size, rotation, margin_right, margin_bottom, opacity=0.15):
+def draw_watermark(
+    base_image,
+    watermark_path,
+    size,
+    rotation,
+    margin_right,
+    margin_bottom,
+    opacity=0.15,
+):
     """Draw rotated watermark in bottom-right corner with transparency."""
     if not os.path.exists(watermark_path):
         return
@@ -279,7 +305,9 @@ def draw_watermark(base_image, watermark_path, size, rotation, margin_right, mar
         watermark = watermark.resize((size, size), Image.Resampling.LANCZOS)
 
         # Rotate watermark
-        watermark = watermark.rotate(rotation, expand=True, resample=Image.Resampling.BICUBIC)
+        watermark = watermark.rotate(
+            rotation, expand=True, resample=Image.Resampling.BICUBIC
+        )
 
         # Apply opacity
         alpha = watermark.split()[3]
@@ -327,26 +355,31 @@ def generate_profile_card(
     draw = ImageDraw.Draw(img)
 
     # Font sizes (refined hierarchy)
-    size_username = 36      # +12% larger, clear visual anchor
-    size_stats_num = 16     # -10% smaller than handle
-    size_stats_label = 16   # Match stats numbers
-    size_name = 24          # +8% larger than stats, secondary to handle
-    size_category = 14      # -12% smaller than name
+    size_username = 44  # Larger, sans-serif
+    size_stats_num = 28  # Larger numbers
+    size_stats_label = 28  # Same size as numbers
+    size_name = 32  # Name size
+    size_category = 24  # Category size
 
     # Font indices for Helvetica Neue .ttc: 0 = Regular, 1 = Bold, 4 = Medium
-    bold_index = 1
-    medium_index = 4        # Medium weight for stats numbers
     regular_index = 0
 
     # Load fonts for measuring (at display size)
-    font_username = get_font(FONT_MONO_PATHS, size_username, index=0)
-    font_stats_num = get_font(FONT_BOLD_PATHS, size_stats_num, index=bold_index)
-    font_stats_label = get_font(FONT_REGULAR_PATHS, size_stats_label, index=regular_index)
-    font_name = get_font(FONT_BOLD_PATHS, size_name, index=bold_index)
+    # Username is now sans-serif (regular or medium depending on preference, image looks Regular/Medium)
+    font_username = get_font(FONT_REGULAR_PATHS, size_username, index=regular_index)
+    font_stats_label = get_font(
+        FONT_REGULAR_PATHS, size_stats_label, index=regular_index
+    )
+    font_name = get_font(FONT_REGULAR_PATHS, size_name, index=regular_index)
     font_category = get_font(FONT_REGULAR_PATHS, size_category, index=regular_index)
 
     # Draw profile picture with gradient ring
-    pic_center_x = PROFILE_PIC_MARGIN_LEFT + (PROFILE_PIC_SIZE // 2) + RING_THICKNESS + RING_GAP_THICKNESS
+    pic_center_x = (
+        PROFILE_PIC_MARGIN_LEFT
+        + (PROFILE_PIC_SIZE // 2)
+        + RING_THICKNESS
+        + RING_GAP_THICKNESS
+    )
     pic_center_y = PROFILE_PIC_Y_CENTER
 
     draw_circular_profile_pic(
@@ -366,7 +399,9 @@ def generate_profile_card(
     username_bbox = draw.textbbox((0, 0), username, font=font_username)
     username_h = username_bbox[3] - username_bbox[1]
 
-    stats_text = f"{format_count(followers)} followers   {format_count(following)} following"
+    stats_text = (
+        f"{format_count(followers)} followers   {format_count(following)} following"
+    )
     stats_bbox = draw.textbbox((0, 0), stats_text, font=font_stats_label)
     stats_h = stats_bbox[3] - stats_bbox[1]
 
@@ -381,9 +416,9 @@ def generate_profile_card(
         category_h = category_bbox[3] - category_bbox[1]
 
     # Gaps between lines (tight vertical rhythm)
-    gap1 = 12  # Handle → Stats: spacing below username/badge row
-    gap2 = 9   # Stats → Name: 8-10px
-    gap3 = 5   # Name → Category: 4-6px
+    gap1 = 24  # Handle → Stats (Increased margin)
+    gap2 = 16  # Stats → Name
+    gap3 = 16  # Name → Category (Increased margin)
 
     # Calculate total text block height
     total_height = username_h + gap1 + stats_h
@@ -396,16 +431,22 @@ def generate_profile_card(
     current_y = (HEIGHT - total_height) // 2
     text_x = TEXT_AREA_LEFT_MARGIN
 
-    # Draw username (anti-aliased, SF Mono font)
+    # Draw username (anti-aliased, Sans-Serif font now)
     username_width, _ = draw_text_antialiased(
-        img, (text_x, current_y), username,
-        FONT_MONO_PATHS, size_username, BLACK,
-        scale=TEXT_SUPERSAMPLE, font_index=0
+        img,
+        (text_x, current_y),
+        username,
+        FONT_REGULAR_PATHS,
+        size_username,
+        BLACK,
+        scale=TEXT_SUPERSAMPLE,
+        font_index=regular_index,
     )
 
-    # Draw verified badge next to username (6px margin)
-    badge_x = text_x + username_width + 6
-    badge_y = current_y + (username_h - VERIFIED_BADGE_SIZE) // 2
+    # Draw verified badge next to username (8px margin)
+    badge_x = text_x + username_width + 8
+    # Center badge vertically relative to username cap height approx
+    badge_y = current_y + (username_h - VERIFIED_BADGE_SIZE) // 2 + 2
     badge_img = load_verified_badge(VERIFIED_BADGE_SIZE)
     if badge_img:
         img.paste(badge_img, (int(badge_x), int(badge_y)), badge_img)
@@ -418,57 +459,94 @@ def generate_profile_card(
     followers_formatted = format_count(followers)
     following_formatted = format_count(following)
 
-    # Followers count (medium weight, anti-aliased)
+    # Followers count (regular)
     followers_width, _ = draw_text_antialiased(
-        img, (text_x, current_y), followers_formatted,
-        FONT_BOLD_PATHS, size_stats_num, BLACK,
-        scale=TEXT_SUPERSAMPLE, font_index=medium_index
+        img,
+        (text_x, current_y),
+        followers_formatted,
+        FONT_REGULAR_PATHS,
+        size_stats_num,
+        BLACK,
+        scale=TEXT_SUPERSAMPLE,
+        font_index=regular_index,
     )
 
-    # "followers" label (anti-aliased)
+    # "followers" label (regular, grey)
     followers_label_width, _ = draw_text_antialiased(
-        img, (text_x + followers_width + 4, current_y), "followers",
-        FONT_REGULAR_PATHS, size_stats_label, GREY,
-        scale=TEXT_SUPERSAMPLE, font_index=regular_index
+        img,
+        (text_x + followers_width + 6, current_y),
+        "followers",
+        FONT_REGULAR_PATHS,
+        size_stats_label,
+        GREY,
+        scale=TEXT_SUPERSAMPLE,
+        font_index=regular_index,
     )
 
-    # Following count (medium weight, anti-aliased) - 14px gap for consistent spacing
-    following_x = text_x + followers_width + 4 + followers_label_width + 14
+    # Following count (regular) - 20px gap
+    following_x = text_x + followers_width + 6 + followers_label_width + 20
     following_width, _ = draw_text_antialiased(
-        img, (following_x, current_y), following_formatted,
-        FONT_BOLD_PATHS, size_stats_num, BLACK,
-        scale=TEXT_SUPERSAMPLE, font_index=medium_index
+        img,
+        (following_x, current_y),
+        following_formatted,
+        FONT_REGULAR_PATHS,
+        size_stats_num,
+        BLACK,
+        scale=TEXT_SUPERSAMPLE,
+        font_index=regular_index,
     )
 
-    # "following" label (anti-aliased)
+    # "following" label (regular, grey)
     draw_text_antialiased(
-        img, (following_x + following_width + 4, current_y), "following",
-        FONT_REGULAR_PATHS, size_stats_label, GREY,
-        scale=TEXT_SUPERSAMPLE, font_index=regular_index
+        img,
+        (following_x + following_width + 6, current_y),
+        "following",
+        FONT_REGULAR_PATHS,
+        size_stats_label,
+        GREY,
+        scale=TEXT_SUPERSAMPLE,
+        font_index=regular_index,
     )
 
     # Draw full name (anti-aliased)
     if display_name:
         current_y += stats_h + gap2
         draw_text_antialiased(
-            img, (text_x, current_y), display_name,
-            FONT_BOLD_PATHS, size_name, BLACK,
-            scale=TEXT_SUPERSAMPLE, font_index=bold_index
+            img,
+            (text_x, current_y),
+            display_name,
+            FONT_REGULAR_PATHS,
+            size_name,
+            BLACK,
+            scale=TEXT_SUPERSAMPLE,
+            font_index=regular_index,
         )
 
     # Draw category (anti-aliased)
     if category:
         current_y += (name_h if display_name else stats_h) + gap3
         draw_text_antialiased(
-            img, (text_x, current_y), category,
-            FONT_REGULAR_PATHS, size_category, GREY,
-            scale=TEXT_SUPERSAMPLE, font_index=regular_index
+            img,
+            (text_x, current_y),
+            category,
+            FONT_REGULAR_PATHS,
+            size_category,
+            GREY,
+            scale=TEXT_SUPERSAMPLE,
+            font_index=regular_index,
         )
 
     # Draw watermark in bottom-right corner
     watermark_path = os.path.join(os.path.dirname(__file__), "..", WATERMARK_PNG)
-    draw_watermark(img, watermark_path, WATERMARK_SIZE, WATERMARK_ROTATION,
-                   WATERMARK_MARGIN_RIGHT, WATERMARK_MARGIN_BOTTOM, WATERMARK_OPACITY)
+    draw_watermark(
+        img,
+        watermark_path,
+        WATERMARK_SIZE,
+        WATERMARK_ROTATION,
+        WATERMARK_MARGIN_RIGHT,
+        WATERMARK_MARGIN_BOTTOM,
+        WATERMARK_OPACITY,
+    )
 
     # Convert to RGB and save
     rgb_img = Image.new("RGB", img.size, WHITE)
